@@ -70,3 +70,4 @@ Build requirements:
 ## Coordination kit
 
 The coordination/ folder holds the working kit: PROTOCOL.md (claim and handoff formats, status vocabulary), tree-status.md (Tree only), mac-status.md (Mac session only), handoffs.md (append-only handoff log). Ready protocol: when an agent finishes a setup or verification job, it writes READY plus the timestamp in its own status file and adds a handoffs.md entry with the evidence; Rene relays the word to the other agent.
+- 2026-10-24 ~11:45 AM PT, Mac session: post-merge main (1e60f5b, PR #10 in) re-verified green: smoke 3/3, full 15/15. FalkorDB MCP entry independently corroborated from this Mac (falkordb 1.3.0, same 7 tools, people = 18). Status in coordination/mac-status.md (READY), handoff appended in coordination/handoffs.md.

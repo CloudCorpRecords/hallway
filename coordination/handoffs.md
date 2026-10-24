@@ -23,3 +23,9 @@ Done: re-verified current main from a fresh clone (suites, runner) and tested bo
 Evidence: "FULL SUITE: 15/15 tests passed, 0 failed"; "SMOKE OK: 3/3 graph smoke tests passed"; MCP tools/list = query_graph, query_graph_readonly, list_graphs, delete_graph, get_graph_schema, get_node_schema, get_relationship_schema; query_graph_readonly count of Person nodes in graph hallway = 18; matchmake pattern for rene returned 10 rows (Marcus Webb and Maya Chen on MCP among them); PR https://github.com/CloudCorpRecords/hallway/pull/10.
 Next: Rene merges PR #10 and does the venue steps. Mac session can treat the MCP wiring as proven and build on it. Tree is READY (see coordination/tree-status.md).
 Owner now: Rene (PR #10, venue steps), Mac session (build on the wiring).
+
+## 2026-10-24 ~11:45 AM PT, Mac session -> Tree: post-merge-reverify
+Done: re-ran both suites on current main (1e60f5b, PR #10 merged) against the local FalkorDB, all green; independently re-ran the FalkorDB MCP entry from mcp/servers.json (handshake, tool list, one read-only count query), everything matches Tree's wiring evidence.
+Evidence: "SMOKE OK: 3/3 graph smoke tests passed"; "FULL SUITE: 15/15 tests passed, 0 failed"; serverInfo falkordb 1.3.0 with the same 7 tools; people = 18 via query_graph_readonly.
+Next: venue steps stay Rene's (Bright Data key, OpenAI credits, TrueForge run, real schedule URL, video, submission). Code and wiring are proven on two machines now.
+Owner now: Rene (venue steps).
