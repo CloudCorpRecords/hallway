@@ -48,6 +48,8 @@ Build requirements:
 - Tree, queued after PR 2: PR 3 branch tree/whimsical-ui. Visual board UI plus plan add/drop endpoints and changes feed. Area: app/.
 - Tree, queued after PR 3: PR 4 branch tree/docs-demo-refresh. README and DEMO.md refresh. Areas: README.md, DEMO.md.
 - Done, Tree: PR #1 (trueforge-schema-pass) open. Model field and mcp_servers shapes aligned to the TrueForge docs. Qodo installed on this repo; PR #1 is waiting on a Qodo review (trigger comment posted).
+- Mac session (rene lane), started ~10:53 AM PT Oct 24: Scout stale edge cleanup. Branch rene/scout-stale-edges. Areas: agents/scout.py, ingest/. Status: claimed, not yet editing.
+- Mac session (rene lane), started ~10:53 AM PT Oct 24: Pin requirements.txt plus Python version note. Branch rene/pin-requirements. Area: requirements.txt (.python-version if needed). Status: claimed, not yet editing.
 
 ### FREE to claim (suggested for the Mac session)
 
