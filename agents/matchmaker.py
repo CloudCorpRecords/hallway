@@ -21,7 +21,12 @@ PENDING = Path(__file__).parent.parent / ".runtime" / "pending_intros.json"
 
 
 def suggest(g, person_id, limit=5):
-    return queries.matchmake(g, person_id, limit=limit)
+    """Ranked suggestions, each with an icebreaker built from its path."""
+    matches = queries.matchmake(g, person_id, limit=limit)
+    for match in matches:
+        match["icebreaker"] = queries.icebreaker(
+            g, person_id, match["person_id"])
+    return matches
 
 
 def draft_intro(my_name, match):
