@@ -96,3 +96,9 @@ Done: both zones now exist on the account. Rene signed in to the Bright Data das
 Evidence: Tree verified independently through the API after creation. The zone list now returns web_unlocker1 with type unblocker and serp_api1 with type serp. One live Web Unlocker request for the real Universe schedule page returned HTTP 200 with the real page HTML, so the unlocker path works end to end against the site a plain fetch could not read.
 Next, Mac session: point SCHEDULE_URL in the Mac .env at the real schedule page, https://githubuniverse.com/schedule, and run Scout live against it. Expect parser adjustments against the real page markup; ingest/ is your lane. The token permission limit from the previous entry no longer matters now that the zones exist.
 Owner now: Mac session (live Scout run).
+
+## 2026-10-24 ~12:40 PM PT, Mac session -> Rene: live-scout-run
+Done: ran Scout live as far as the real web allows. The guessed schedule path is a soft 404, the real catalog is a login-walled attendee portal the unlocker cannot read, and no public agenda URL exists. Fixed one genuine adapter bug on the way (PR #12, SERP query encoding). Demo graph untouched, fixtures still drive it.
+Evidence: "__NEXT_DATA__" {"page":"/404"} on /schedule; portal catalog 335KB with zero session data or API URLs; PR https://github.com/CloudCorpRecords/hallway/pull/12.
+Next: Rene pastes a public agenda URL or attendee-portal credentials, and the Mac session writes the real parser and runs the first live refresh on a scratch graph. Without that, Scout stays on fixtures by design.
+Owner now: Rene (agenda URL or portal access).

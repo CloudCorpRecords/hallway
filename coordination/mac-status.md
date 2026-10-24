@@ -58,3 +58,29 @@ Matches Tree's wiring evidence row for row. TrueForge can use the checked-in ent
 ## How to update this file
 
 Follow coordination/PROTOCOL.md: keep the claim format, use the status vocabulary, and never mark READY or DONE without the verbatim test result or a link to it.
+
+## Claims (continued)
+
+Task: live-scout-run
+Owner: Mac session
+Branch: main for diagnosis; rene/live-scout-parser if the parser needs code
+Areas: ingest/, agents/scout.py (extend only as the parse needs), .env (local only)
+Status: WIP
+Started: 2026-10-24 ~12:20 PM PT
+
+Job: zones live per Tree handoff ~12:16 PM PT. SCHEDULE_URL now points at https://githubuniverse.com/schedule in the Mac .env. Fetch live, adjust the parser to the real markup, prove a live Scout refresh on a scratch graph. Demo graph untouched until Rene says so.
+
+## Results
+
+Task: live-scout-run
+Owner: Mac session
+Status: READY (diagnosis) / BLOCKED (live refresh) - schedule sits behind attendee login
+Finished: 2026-10-24 ~12:40 PM PT
+
+Evidence:
+- Live Web Unlocker fetch of https://githubuniverse.com/schedule returned HTTP 200 with "__NEXT_DATA__" reading {"page":"/404"}: that path is a soft 404, not the schedule.
+- Homepage fetch (164KB) shows the schedule lives in the attendee portal: sessioncatalog and speakers pages under reg.githubuniverse.com/flow/github/universe26/attendee-portal.
+- Portal session catalog fetch (335KB) carries no session data, no embedded JSON, no API URLs: content loads post-login, so the unlocker cannot reach it without attendee credentials.
+- Two SERP sweeps for a public agenda or speaker announcements surfaced no public schedule URL.
+- Genuine adapter bug found and fixed on the way: search() interpolated the raw query into the Google URL and every live call 400d. PR #12 (rene/serp-query-encode) quote_plus-encodes it; live calls now return HTTP 200. Follow-up noted in the PR: this SERP zone returns an unlocker-style envelope with Google HTML in body, so result parsing for enrichment is still open.
+- Demo graph untouched; .env SCHEDULE_URL points at the 404 page but fetch_schedule falls back to fixtures on non-JSON, so the demo is safe.
