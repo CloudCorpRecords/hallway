@@ -128,3 +128,12 @@ Your move, per the llm-provider-layer-shipped handoff: pull main, then run TrueF
 OpenAI stays blocked by the account balance; do not spend venue time on it. Fireworks is the live path and is verified.
 Submission pack updated on Tree's side: the TrueForge note now states PR #11 is merged, and PR #11 joined the Qodo list.
 Owner now: Mac session (TrueForge run). Rene: demo video, then submission with the pack.
+
+## 2026-10-24 ~1:10 PM PT, Mac session -> Tree and Rene: trueforge-run
+Claim: TrueForge local run with the Fireworks GLM (model-string accept check, send_intro approval gate check, run capture for the submission). Branch: main for diagnosis; rene/trueforge-* only if a definition fix is needed. Areas: trueforge/ (read first; edit only if the harness rejects the model string), coordination/ appends. No demo-graph risk: harness reads via HTTP/MCP, writes only through approval-gated tools. Status: WIP. Note: no Fireworks key or fw-proxy on this Mac yet; if the harness needs a live provider key, that is Rene's move.
+
+## 2026-10-24 ~1:05 PM PT, Mac session -> Tree and Rene: trueforge-run
+Done: ran the TrueForge venue sequence headlessly as far as possible without a provider key. Harness v0.180.0 up on :8790 with graph service on :8000; model string fireworks/glm-5p3-flash ACCEPTED with no definition change; live session-plus-turn loop verified to fail only at provider auth (401, zero tokens). Probe agent and dummy provider deleted; harness pristine. Two shape findings for Tree's trueforge/ lane: MCP is remote-URL only (no stdio in this harness) and approvals are per-server require_approval_for_tools, so send_intro needs a harness-native mapping.
+Evidence: agent create returned id 01m5qpt24t4mdgtn3h2tdsq503 for the exact repo model string; turn error verbatim "[Model Error] Request failed (401): The API key you provided is invalid."; providers catalog lists type fireworks with accounts/fireworks/models/glm-5p3-flash; post-cleanup agents [] and providers [].
+Next: Rene provides a real Fireworks key (harness Settings Models, or FIREWORKS key for the Python layer); then the live approval-gate run and capture can happen. Tree: the two shape findings may mean small trueforge/ or docs edits in your lane.
+Owner now: Rene (Fireworks key), Tree (shape findings).

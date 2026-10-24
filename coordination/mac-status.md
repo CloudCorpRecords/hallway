@@ -59,6 +59,20 @@ Matches Tree's wiring evidence row for row. TrueForge can use the checked-in ent
 
 Follow coordination/PROTOCOL.md: keep the claim format, use the status vocabulary, and never mark READY or DONE without the verbatim test result or a link to it.
 
+## Results (TrueForge run, 2026-10-24 ~1:05 PM PT)
+
+Task: trueforge-run
+Owner: Mac session
+Status: READY (harness proven minus live LLM) / BLOCKED (live run plus approval gate need a real Fireworks key)
+Finished: 2026-10-24 ~1:05 PM PT
+
+Evidence:
+- Harness up headless: TrueForge v0.180.0 standalone on :8790, docs at /api/v1/docs (52 paths). Graph service up on :8000: {"ok":true,"graph":"hallway"}, matchmake top Diego Fuentes score 19.
+- Model string ACCEPTED as-is: POST /api/v1/agents with {"model":{"name":"fireworks/glm-5p3-flash"}} returned an agent id once a fireworks provider exposing a model named glm-5p3-flash exists. Provider catalog confirms type fireworks with model_id accounts/fireworks/models/glm-5p3-flash. No definition change needed; no PR opened.
+- Live loop reaches the provider and stops only at auth: session plus turn created via API, turn ended error with verbatim "[Model Error] Request failed (401): The API key you provided is invalid." Zero tokens spent. Dummy provider and probe agent deleted after; harness left pristine (agents [], providers []).
+- Two harness-shape findings for the trueforge/ lane (read-only from here, files are Tree's): (1) MCP servers are remote-URL only in this harness version (Settings Connectors, catalog, Add MCP Server); there is no stdio shape in the REST API, so mcp/servers.json as written fits other harnesses, not TrueForge: the FalkorDB MCP needs a remote URL or the repo HTTP API needs a harness-native tool mapping. AgentSpec has no http or action tool fields. (2) Approvals are per-MCP-server require_approval_for_tools (default ["@write","@destructive"], name tools explicitly or ["@all"]); send_intro must map onto that, not the cookbook action shape.
+- Both servers stopped after the run; demo graph untouched (reads only).
+
 ## Claims (continued)
 
 Task: live-scout-run
