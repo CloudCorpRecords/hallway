@@ -17,11 +17,15 @@ from fastapi.staticfiles import StaticFiles  # noqa: E402
 from pydantic import BaseModel  # noqa: E402
 
 from graph import queries, seed  # noqa: E402
-from agents import planner, scout  # noqa: E402
+from agents import matchmaker, planner, scout  # noqa: E402
 
 app = FastAPI(title="Hallway")
 STATIC = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
+
+# The last Scout refresh, for the changes feed the board polls. Refreshing
+# through the API updates it; before the first refresh it is simply empty.
+LAST_REFRESH = {"source": None, "upserted": 0, "changes": []}
 
 
 def graph():
@@ -49,6 +53,10 @@ class MeetingIn(BaseModel):
     at: str | None = None
 
 
+class PlanChangeIn(BaseModel):
+    talk_id: str
+
+
 @app.get("/")
 def index():
     return FileResponse(STATIC / "index.html")
@@ -61,6 +69,31 @@ def health():
         g.query("RETURN 1")
         return {"ok": True, "graph": os.environ.get("HALLWAY_GRAPH", "hallway")}
     return guard(_check)
+
+
+@app.get("/api/talks")
+def talks():
+    """Every talk in the day, for the board timeline."""
+    def _run():
+        g = graph()
+        res = g.query(
+            "MATCH (t:Talk)-[:IN_ROOM]->(r:Room) "
+            "OPTIONAL MATCH (t)-[:ABOUT]->(tp:Topic) "
+            "OPTIONAL MATCH (sp:Person)-[:GIVES]->(t) "
+            "RETURN t.id, t.title, t.starts, t.ends, r.name, t.blurb, "
+            "collect(DISTINCT tp.name), collect(DISTINCT sp.name) "
+            "ORDER BY t.starts, t.title")
+        out = []
+        for tid, title, starts, ends, room, blurb, topics, speakers \
+                in res.result_set:
+            out.append({
+                "id": tid, "title": title, "starts": starts, "ends": ends,
+                "room": room, "blurb": blurb,
+                "topics": sorted(t for t in topics if t),
+                "speakers": sorted(s for s in speakers if s),
+            })
+        return {"talks": out}
+    return guard(_run)
 
 
 @app.get("/api/plan/{person_id}")
@@ -80,11 +113,66 @@ def rebuild(person_id: str):
     return guard(_run)
 
 
-@app.get("/api/matchmake/{person_id}")
-def matchmake(person_id: str):
+def _talk_row(g, talk_id):
+    res = g.query(
+        "MATCH (t:Talk {id: $tid}) RETURN t.title, t.starts, t.ends",
+        {"tid": talk_id})
+    if not res.result_set:
+        return None
+    title, starts, ends = res.result_set[0]
+    return {"id": talk_id, "title": title, "starts": starts, "ends": ends}
+
+
+@app.post("/api/plan/{person_id}/add")
+def plan_add(person_id: str, change: PlanChangeIn):
+    """Add a talk to the plan. Refuses, in plain words, when it clashes."""
     def _run():
         g = graph()
-        return {"matches": queries.matchmake(g, person_id)}
+        talk = _talk_row(g, change.talk_id)
+        if talk is None:
+            raise HTTPException(status_code=404,
+                                detail=f"No talk with id {change.talk_id}")
+        for pick in queries.planned_talks(g, person_id):
+            if pick["id"] == change.talk_id:
+                return {"added": True, "talk_id": change.talk_id,
+                        "note": "already in your plan"}
+            if talk["starts"] < pick["ends"] and \
+                    pick["starts"] < talk["ends"]:
+                other = _talk_row(g, pick["id"]) or pick
+                raise HTTPException(
+                    status_code=409,
+                    detail=(f"That clashes with {other['title']} "
+                            f"({pick['starts']}-{pick['ends']}), which is "
+                            f"already in your plan. Drop that one first "
+                            f"if you would rather swap."))
+        if not queries.plan_talk(g, person_id, change.talk_id):
+            raise HTTPException(status_code=409,
+                                detail="That talk clashes with your plan.")
+        return {"added": True, "talk_id": change.talk_id}
+    return guard(_run)
+
+
+@app.post("/api/plan/{person_id}/drop")
+def plan_drop(person_id: str, change: PlanChangeIn):
+    """Remove a talk from the plan."""
+    def _run():
+        g = graph()
+        res = g.query(
+            "MATCH (:Person {id: $pid})-[r:PLANNED]->(t:Talk {id: $tid}) "
+            "RETURN count(r)", {"pid": person_id, "tid": change.talk_id})
+        existed = bool(res.result_set and res.result_set[0][0])
+        g.query(
+            "MATCH (:Person {id: $pid})-[r:PLANNED]->(t:Talk {id: $tid}) "
+            "DELETE r", {"pid": person_id, "tid": change.talk_id})
+        return {"dropped": existed, "talk_id": change.talk_id}
+    return guard(_run)
+
+
+@app.get("/api/matchmake/{person_id}")
+def matchmake_ep(person_id: str):
+    def _run():
+        g = graph()
+        return {"matches": matchmaker.suggest(g, person_id)}
     return guard(_run)
 
 
@@ -109,5 +197,13 @@ def record(meeting: MeetingIn):
 def refresh():
     def _run():
         g = graph()
-        return scout.refresh(g)
+        report = scout.refresh(g)
+        LAST_REFRESH.update(report)
+        return report
     return guard(_run)
+
+
+@app.get("/api/changes")
+def changes():
+    """The last Scout refresh: what moved, in plain lines."""
+    return dict(LAST_REFRESH)
