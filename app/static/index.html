@@ -2,61 +2,352 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Hallway: your conference, run by agents</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hallway: the conference board</title>
 <style>
-  body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 1100px; padding: 0 1rem; background: #0d1117; color: #e6edf3; }
-  h1 { font-size: 1.6rem; } h2 { font-size: 1.1rem; color: #7ee787; }
-  .cols { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 1rem; }
-  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem; }
-  code.path { display: block; white-space: pre-wrap; word-break: break-word; color: #ffa657; font-size: 0.78rem; margin-top: 0.3rem; }
-  .talk { margin-bottom: 0.6rem; } .when { color: #79c0ff; }
-  button { background: #238636; color: white; border: 0; border-radius: 6px; padding: 0.45rem 0.9rem; cursor: pointer; }
-  input { background: #0d1117; color: #e6edf3; border: 1px solid #30363d; border-radius: 6px; padding: 0.4rem; }
-  .err { color: #ff7b72; }
+  :root {
+    --ink: #2d2a26;
+    --paper: #fbf6ef;
+    --card: #fffdf9;
+    --line: #e8dcc8;
+    --coral: #ff7a59;
+    --teal: #2a9d8f;
+    --mustard: #e9c46a;
+    --plum: #7c5cbf;
+    --sky: #4d96ff;
+    --leaf: #6bcb77;
+    --rose: #ef6f9c;
+    --rust: #de6b35;
+    --slate: #64748b;
+    --shadow: 0 6px 18px rgba(93, 64, 28, 0.10);
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Avenir Next", "Segoe UI", system-ui, sans-serif;
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-size: 18px; line-height: 1.45;
+  }
+  header {
+    background: linear-gradient(120deg, #fff3df, #ffe3d3 55%, #ffeef2);
+    border-bottom: 3px solid var(--line);
+    padding: 1.4rem 2rem 1.1rem;
+  }
+  .sign {
+    display: inline-block; background: var(--ink); color: #ffe9c9;
+    font-weight: 700; letter-spacing: 0.14em; font-size: 0.8rem;
+    padding: 0.25rem 0.7rem; border-radius: 999px; margin-bottom: 0.5rem;
+  }
+  h1 { margin: 0; font-size: 2.6rem; line-height: 1.05; }
+  h1 .accent { color: var(--coral); }
+  .tagline { margin: 0.35rem 0 0; font-size: 1.15rem; color: #5b554b; }
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center;
+    margin-top: 1rem;
+  }
+  .controls label { font-weight: 600; }
+  input[type="text"] {
+    font: inherit; padding: 0.45rem 0.7rem; border: 2px solid var(--line);
+    border-radius: 12px; background: #fff; width: 10rem;
+  }
+  button {
+    font: inherit; font-weight: 600; cursor: pointer; border: 0;
+    border-radius: 999px; padding: 0.5rem 1.1rem; background: var(--ink);
+    color: #fff8ec; box-shadow: var(--shadow);
+  }
+  button.ghost { background: #fff; color: var(--ink); border: 2px solid var(--line); }
+  button.small { padding: 0.3rem 0.85rem; font-size: 0.95rem; }
+  button.add { background: var(--teal); }
+  button.drop { background: #fff; color: #b3402a; border: 2px solid #f3c1b3; }
+  main { max-width: 1280px; margin: 0 auto; padding: 1.2rem 1.4rem 3rem; }
+  #scout-banner {
+    display: none; background: #fff7d6; border: 2px solid var(--mustard);
+    border-radius: 16px; padding: 1rem 1.2rem; margin-bottom: 1.2rem;
+    box-shadow: var(--shadow);
+  }
+  #scout-banner h2 { margin: 0 0 0.4rem; font-size: 1.2rem; }
+  #scout-banner ul { margin: 0; padding-left: 1.2rem; }
+  #notice {
+    display: none; background: #fdeceb; border: 2px solid #f3b8ae;
+    color: #7c2718; border-radius: 16px; padding: 0.8rem 1.1rem;
+    margin-bottom: 1.2rem; font-weight: 600;
+  }
+  .board { display: grid; grid-template-columns: 1.7fr 1fr; gap: 1.4rem; align-items: start; }
+  @media (max-width: 900px) { .board { grid-template-columns: 1fr; } }
+  section h2 { font-size: 1.5rem; margin: 0.4rem 0 0.8rem; }
+  section h2 .sub { font-size: 1rem; font-weight: 500; color: #7a7263; }
+  .talk {
+    background: var(--card); border: 2px solid var(--line); border-radius: 18px;
+    padding: 0.9rem 1.1rem; margin-bottom: 0.8rem; box-shadow: var(--shadow);
+    display: grid; grid-template-columns: 7.2rem 1fr auto; gap: 0.9rem; align-items: start;
+  }
+  .talk.planned { border-color: var(--teal); background: #f2fbf7; }
+  .when { font-weight: 800; font-size: 1.05rem; color: var(--rust); }
+  .when .ends { display: block; font-weight: 600; color: #9a8f7d; font-size: 0.9rem; }
+  .talk h3 { margin: 0 0 0.2rem; font-size: 1.18rem; }
+  .where { color: #6b6355; font-size: 0.98rem; }
+  .why { margin-top: 0.35rem; font-size: 0.95rem; color: #38685f; font-style: italic; }
+  .plan-tag {
+    display: inline-block; background: var(--teal); color: #fff; font-size: 0.8rem;
+    font-weight: 700; padding: 0.12rem 0.6rem; border-radius: 999px; margin-left: 0.4rem;
+    vertical-align: middle;
+  }
+  .chips { margin-top: 0.45rem; display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .chip {
+    font-size: 0.82rem; font-weight: 700; color: #fff; border-radius: 999px;
+    padding: 0.14rem 0.6rem;
+  }
+  .panel {
+    background: var(--card); border: 2px solid var(--line); border-radius: 18px;
+    padding: 1rem 1.1rem; box-shadow: var(--shadow); margin-bottom: 1.2rem;
+  }
+  .person { border-bottom: 2px dashed var(--line); padding: 0.85rem 0; }
+  .person:last-child { border-bottom: 0; }
+  .person h3 { margin: 0; font-size: 1.2rem; display: inline; }
+  .score {
+    float: right; background: var(--mustard); color: #5c4300; font-weight: 800;
+    border-radius: 999px; padding: 0.1rem 0.65rem; font-size: 0.9rem;
+  }
+  .company { color: #6b6355; }
+  .crumbs { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; margin: 0.55rem 0; }
+  .crumb {
+    background: #fdf0e2; border: 2px solid var(--line); border-radius: 999px;
+    padding: 0.16rem 0.65rem; font-size: 0.9rem; font-weight: 600;
+  }
+  .crumb.you { background: var(--ink); color: #ffe9c9; border-color: var(--ink); }
+  .crumb.person { background: #e7f6f3; border-color: var(--teal); }
+  .arrow { color: #b39f83; font-weight: 800; }
+  .icebreaker {
+    background: #fff8ec; border-left: 5px solid var(--mustard);
+    border-radius: 0 12px 12px 0; padding: 0.5rem 0.8rem; font-size: 0.98rem;
+  }
+  .icebreaker .label { font-weight: 800; color: #8a6d1f; font-size: 0.8rem; letter-spacing: 0.06em; }
+  details.path { margin-top: 0.5rem; }
+  details.path summary { cursor: pointer; font-size: 0.85rem; color: #8a7f6c; font-weight: 600; }
+  code.path {
+    display: block; white-space: pre-wrap; word-break: break-word;
+    font-size: 0.78rem; color: #7a4b21; margin-top: 0.3rem;
+  }
+  .met-item { padding: 0.5rem 0; border-bottom: 2px dashed var(--line); }
+  .met-item:last-child { border-bottom: 0; }
+  .met-item .at { color: var(--rust); font-weight: 700; }
+  .empty { color: #8a7f6c; font-style: italic; }
+  #status { font-weight: 600; color: #38685f; }
+  .err { color: #b3402a; font-weight: 700; }
 </style>
 </head>
 <body>
-<h1>Hallway</h1>
-<p>Your conference, run by agents that share one graph.
-Person: <input id="person" value="rene" size="10">
-<button onclick="loadAll()">Load</button>
-<button onclick="rebuild()">Rebuild my plan</button>
-<button onclick="refresh()">Scout: refresh data</button>
-<span id="status"></span></p>
-<div class="cols">
-  <div class="card"><h2>My plan</h2><div id="plan"></div></div>
-  <div class="card"><h2>Who to meet (the path is the reason)</h2><div id="meet"></div></div>
-  <div class="card"><h2>Who I already met</h2><div id="met"></div></div>
-</div>
+<header>
+  <span class="sign">PATCH THE CONFERENCE · THE HALLWAY BOARD</span>
+  <h1>Hallway<span class="accent">.</span></h1>
+  <p class="tagline">Your conference, run by agents that share one memory.
+  Pick your talks, meet the right people, and let Scout watch the schedule
+  so you do not have to.</p>
+  <div class="controls">
+    <label for="person">Person</label>
+    <input type="text" id="person" value="rene">
+    <button onclick="loadAll()">Load my day</button>
+    <button class="ghost" onclick="rebuild()">Rebuild my plan</button>
+    <button class="ghost" onclick="refresh()">Scout: check for changes</button>
+    <span id="status"></span>
+  </div>
+</header>
+<main>
+  <div id="scout-banner">
+    <h2>Scout spotted schedule changes</h2>
+    <ul id="scout-changes"></ul>
+    <p style="margin:0.5rem 0 0">Your plan can be rebuilt against the new
+    times with the button above.</p>
+  </div>
+  <div id="notice"></div>
+  <div class="board">
+    <section>
+      <h2>Your day <span class="sub">every talk on the board, your picks glow green</span></h2>
+      <div id="timeline"></div>
+    </section>
+    <div>
+      <section class="panel">
+        <h2>Who to meet <span class="sub">the trail is the reason</span></h2>
+        <div id="meet"></div>
+      </section>
+      <section class="panel">
+        <h2>Who I already met <span class="sub">memory, written in the graph</span></h2>
+        <div id="met"></div>
+      </section>
+    </div>
+  </div>
+</main>
 <script>
 const $ = id => document.getElementById(id);
+const TOPIC_COLORS = {
+  "MCP": "#ff7a59", "AI Agents": "#2a9d8f", "Rust": "#de6b35",
+  "Developer Tools": "#4d96ff", "Open Source": "#6bcb77",
+  "Agent Memory": "#7c5cbf", "Web Data": "#ef6f9c",
+  "Code Review": "#64748b", "Security": "#d64550"
+};
+function color(topic) { return TOPIC_COLORS[topic] || "#8a7f6c"; }
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c =>
+    ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+}
 async function get(url, opts) {
   const r = await fetch(url, opts);
-  if (!r.ok) { const t = await r.text(); throw new Error(t); }
-  return r.json();
+  let data = null;
+  try { data = await r.json(); } catch (e) { /* plain text error */ }
+  if (!r.ok) {
+    const detail = (data && data.detail) || `request failed (${r.status})`;
+    const err = new Error(detail); err.status = r.status; throw err;
+  }
+  return data;
 }
-function person() { return $("person").value || "rene"; }
+function person() { return $("person").value.trim() || "rene"; }
+function notice(msg) {
+  if (msg) { $("notice").textContent = msg; $("notice").style.display = "block"; }
+  else { $("notice").style.display = "none"; }
+}
+let planIds = new Set();
+let whyById = {};
+
+function renderTimeline(talks) {
+  $("timeline").innerHTML = talks.map(t => {
+    const planned = planIds.has(t.id);
+    const chips = t.topics.map(tp =>
+      `<span class="chip" style="background:${color(tp)}">${esc(tp)}</span>`).join("");
+    const why = whyById[t.id];
+    return `<div class="talk ${planned ? "planned" : ""}">
+      <div class="when">${esc(t.starts)}<span class="ends">to ${esc(t.ends)}</span></div>
+      <div>
+        <h3>${esc(t.title)}${planned ? '<span class="plan-tag">in your plan</span>' : ""}</h3>
+        <div class="where">${esc(t.room)} · ${esc(t.speakers.join(", "))}</div>
+        ${why ? `<div class="why">Why this one: ${esc(why)}</div>` : ""}
+        <div class="chips">${chips}</div>
+      </div>
+      <div>${planned
+        ? `<button class="small drop" onclick="dropTalk('${t.id}')">Drop</button>`
+        : `<button class="small add" onclick="addTalk('${t.id}')">Add</button>`}</div>
+    </div>`;
+  }).join("") || '<p class="empty">No talks on the board yet.</p>';
+}
+
+function crumbTrail(m) {
+  const parts = ['<span class="crumb you">You</span>'];
+  const ib = m.icebreaker;
+  if (ib && ib.topic) {
+    parts.push(`<span class="crumb">${esc(ib.topic)}</span>`);
+    if (ib.talk) parts.push(`<span class="crumb">${esc(ib.talk.title)}</span>`);
+  } else if (m.shared_topics && m.shared_topics.length) {
+    parts.push(`<span class="crumb">${esc(m.shared_topics[0])}</span>`);
+    if (m.speaking_on && m.speaking_on.length)
+      parts.push(`<span class="crumb">${esc(m.speaking_on[0])}</span>`);
+  }
+  parts.push(`<span class="crumb person">${esc(m.name)}</span>`);
+  return parts.join('<span class="arrow">→</span>');
+}
+
+function renderMeet(matches) {
+  $("meet").innerHTML = matches.map(m => {
+    const ib = m.icebreaker;
+    const path = (m.paths && m.paths.length) ? m.paths[0].text : "";
+    return `<div class="person">
+      <span class="score">score ${m.score}</span>
+      <h3>${esc(m.name)}</h3> <span class="company">${esc(m.company || "")}</span>
+      <div class="crumbs">${crumbTrail(m)}</div>
+      ${ib && ib.line ? `<div class="icebreaker"><span class="label">ICE BREAKER</span><br>${esc(ib.line)}</div>` : ""}
+      ${path ? `<details class="path"><summary>show the graph path</summary><code class="path">${esc(path)}</code></details>` : ""}
+    </div>`;
+  }).join("") || '<p class="empty">No matches yet. Tell Hallway what you are into.</p>';
+}
+
+function renderMet(met) {
+  $("met").innerHTML = met.map(m =>
+    `<div class="met-item"><b>${esc(m.name)}</b> <span class="at">${esc(m.at || "")}</span><br>${esc(m.note || "")}</div>`
+  ).join("") || '<p class="empty">Nobody yet. The day is young.</p>';
+}
+
+function renderChanges(changes) {
+  if (changes && changes.length) {
+    $("scout-changes").innerHTML = changes.map(c => `<li>${esc(c)}</li>`).join("");
+    $("scout-banner").style.display = "block";
+  } else {
+    $("scout-banner").style.display = "none";
+  }
+}
+
 async function loadAll() {
-  $("status").textContent = "";
+  notice("");
+  $("status").textContent = "loading...";
   try {
-    const plan = await get(`/api/plan/${person()}`);
-    $("plan").innerHTML = plan.talks.map(t =>
-      `<div class="talk"><span class="when">${t.starts}-${t.ends}</span> <b>${t.title}</b><br>${t.room} · ${t.speakers.join(", ")}${t.planned ? " · planned" : ""}</div>`).join("") || "No talks.";
-    const mm = await get(`/api/matchmake/${person()}`);
-    $("meet").innerHTML = mm.matches.map(m =>
-      `<div class="talk"><b>${m.name}</b> (${m.company}) · score ${m.score}` +
-      (m.paths.length ? `<code class="path">${m.paths[0].text}</code>` : "") + `</div>`).join("") || "No matches yet.";
-    const met = await get(`/api/met/${person()}`);
-    $("met").innerHTML = met.met.map(m =>
-      `<div class="talk"><b>${m.name}</b> · ${m.at}<br>${m.note}</div>`).join("") || "Nobody yet.";
-  } catch (e) { $("status").innerHTML = `<span class="err">${e.message}</span>`; }
+    const [talks, plan, mm, met, changes] = await Promise.all([
+      get("/api/talks"),
+      get(`/api/plan/${person()}`),
+      get(`/api/matchmake/${person()}`),
+      get(`/api/met/${person()}`),
+      get("/api/changes")
+    ]);
+    planIds = new Set((plan.planned || []).map(p => p.id));
+    whyById = {};
+    for (const t of plan.talks || []) {
+      if (t.reasons && t.reasons.length) whyById[t.id] = t.reasons.join("; ");
+      else if (t.topics && t.topics.length)
+        whyById[t.id] = "matches your interest in " + t.topics.join(", ");
+    }
+    // planned talks that are not interest matched still deserve a why
+    for (const id of planIds) {
+      if (!whyById[id]) whyById[id] = "you picked this one yourself";
+    }
+    renderTimeline(talks.talks || []);
+    renderMeet(mm.matches || []);
+    renderMet(met.met || []);
+    renderChanges(changes.changes || []);
+    $("status").textContent = "";
+  } catch (e) {
+    $("status").innerHTML = `<span class="err">${esc(e.message)}</span>`;
+  }
 }
-async function rebuild() { await get(`/api/plan/${person()}/rebuild`, {method: "POST"}); loadAll(); }
+
+async function addTalk(talkId) {
+  notice("");
+  try {
+    await get(`/api/plan/${person()}/add`, {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({talk_id: talkId})
+    });
+    loadAll();
+  } catch (e) { notice(e.message); }
+}
+
+async function dropTalk(talkId) {
+  notice("");
+  try {
+    await get(`/api/plan/${person()}/drop`, {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({talk_id: talkId})
+    });
+    loadAll();
+  } catch (e) { notice(e.message); }
+}
+
+async function rebuild() {
+  notice("");
+  try {
+    await get(`/api/plan/${person()}/rebuild`, {method: "POST"});
+    loadAll();
+  } catch (e) { notice(e.message); }
+}
+
 async function refresh() {
-  const r = await get(`/api/scout/refresh`, {method: "POST"});
-  $("status").textContent = " Scout changes: " + (r.changes.join(" | ") || "none");
-  loadAll();
+  notice("");
+  $("status").textContent = "Scout is checking the schedule...";
+  try {
+    const report = await get("/api/scout/refresh", {method: "POST"});
+    renderChanges(report.changes || []);
+    $("status").textContent = report.changes && report.changes.length
+      ? "Scout found changes, listed above." : "Scout: nothing moved.";
+    loadAll();
+  } catch (e) {
+    $("status").innerHTML = `<span class="err">${esc(e.message)}</span>`;
+  }
 }
+
 loadAll();
 </script>
 </body>
