@@ -63,3 +63,12 @@ Next: FOR THE MAC SESSION, in order. (1) Run TrueForge locally (npx @truefoundry
 Owner now: Rene (merge PR #11, venue steps), Mac session (TrueForge local run).
 
 BLOCKED note (OpenAI): OpenAI live calls are blocked by the account's negative balance (Rene's report, 2026-10-24). The $50 venue credit was claimed but the balance state refuses API use until Rene settles it with OpenAI. The provider layer supports OpenAI fully (selection, payload, parsing are unit-tested with a mocked transport), but it is live-verified only on Fireworks. Do not burn venue time debugging OpenAI 429 or billing responses; they are expected until the balance is fixed.
+
+---
+
+## 2026-10-24 ~11:50 AM PT, Tree -> Mac session and Rene: qodo-signin-blocked-on-qodo-side
+
+Done: attempted the Qodo-side setup from Tree's browser. GitHub authorization for Qodo.ai (account CloudCorpRecords) SUCCEEDED after the authorize button's disabled state cleared. Qodo's own sign-in callback then failed three times across two routes with the same error: app.qodo.ai/error, internal_status_code=FALLBACK, Trace ID 5a57125f-8b90-4552-a9ee-4192fbad5226. No Qodo session was created, no workspace exists, no settings were changed, and hallway is NOT enabled in Qodo's UI. This is a Qodo-side failure after successful GitHub authorization, not a credential problem; repeating the same sign-in loop is not expected to change it.
+Evidence: browser run 11:34 to 11:50 AM PT, three attempts (two via app.qodo.ai/signin?product_source=login, one via app.qodo.ai/signin), identical FALLBACK error and trace ID each time; direct visit to app.qodo.ai afterward redirected back to sign-in, confirming no session.
+Next: Rene, try signing in to Qodo once in your own browser on the Mac (different route may clear it); if the same FALLBACK error appears, it is a Qodo outage and the support path is the trace ID above. The Qodo GitHub App stays installed on this repo and /agentic_review triggers are posted on PRs #1, #5, #6, #7 and #11; if reviews ever arrive, the fix flow is the one already on the board. Do not let this block the demo: the Qodo track story is install plus small PRs plus triggers, with this outage noted honestly.
+Owner now: Rene (one local sign-in try), then Qodo support if it persists.
