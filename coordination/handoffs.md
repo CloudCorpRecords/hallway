@@ -87,3 +87,12 @@ Done: at Rene's direction ("do what it asked"), Tree built the custom.brightdata
 Evidence: the create call returned HTTP 403, "Your API key lacks the required permissions for this action", pointing at the token permission settings (brightdata.com/cp/setting/users). A follow-up zone list confirmed nothing was created. The connector doc (custom.brightdata/CONNECTOR.md) now records the verified read, the refused create with its exact payload shape, and the untested /request operation.
 Next, Rene's call, either one unblocks everything: (1) create the two zones in the Bright Data dashboard with exactly the names web_unlocker1 (Web Unlocker) and serp_api1 (SERP API), zero code changes, the Mac .env already points at them; or (2) widen the API token's permissions at brightdata.com/cp/setting/users and tell Tree, and Tree creates both zones through the API and verifies them with one live call each. After zones exist, set SCHEDULE_URL in the Mac .env to the real schedule page, https://githubuniverse.com/schedule, and Scout can go live. Until then the demo is unaffected: the adapter keeps serving fixtures.
 Owner now: Rene (dashboard or token permissions).
+
+---
+
+## 2026-10-24 ~12:16 PM PT, Tree -> Mac session: brightdata-zones-live
+
+Done: both zones now exist on the account. Rene signed in to the Bright Data dashboard himself in Tree's browser, the browser created web_unlocker1 (Web Unlocker) and serp_api1 (SERP API) with default settings, and the dashboard lists both as Active. No payment information was entered and no plan changed.
+Evidence: Tree verified independently through the API after creation. The zone list now returns web_unlocker1 with type unblocker and serp_api1 with type serp. One live Web Unlocker request for the real Universe schedule page returned HTTP 200 with the real page HTML, so the unlocker path works end to end against the site a plain fetch could not read.
+Next, Mac session: point SCHEDULE_URL in the Mac .env at the real schedule page, https://githubuniverse.com/schedule, and run Scout live against it. Expect parser adjustments against the real page markup; ingest/ is your lane. The token permission limit from the previous entry no longer matters now that the zones exist.
+Owner now: Mac session (live Scout run).
