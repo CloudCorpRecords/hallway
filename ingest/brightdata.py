@@ -81,8 +81,10 @@ def fetch_url(url):
 def search(query):
     """SERP API search. Falls back to the search fixture offline."""
     if _key():
+        from urllib.parse import quote_plus
+
         raw = _post(_zone("BRIGHTDATA_ZONE_SERP", "serp_api1"),
-                    f"https://www.google.com/search?q={query}")
+                    f"https://www.google.com/search?q={quote_plus(query)}")
         try:
             data = json.loads(raw)
             results = data.get("organic", data.get("results", []))
