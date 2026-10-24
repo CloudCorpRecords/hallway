@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hallway: your conference, run by agents</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 1100px; padding: 0 1rem; background: #0d1117; color: #e6edf3; }
+  h1 { font-size: 1.6rem; } h2 { font-size: 1.1rem; color: #7ee787; }
+  .cols { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 1rem; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem; }
+  code.path { display: block; white-space: pre-wrap; word-break: break-word; color: #ffa657; font-size: 0.78rem; margin-top: 0.3rem; }
+  .talk { margin-bottom: 0.6rem; } .when { color: #79c0ff; }
+  button { background: #238636; color: white; border: 0; border-radius: 6px; padding: 0.45rem 0.9rem; cursor: pointer; }
+  input { background: #0d1117; color: #e6edf3; border: 1px solid #30363d; border-radius: 6px; padding: 0.4rem; }
+  .err { color: #ff7b72; }
+</style>
+</head>
+<body>
+<h1>Hallway</h1>
+<p>Your conference, run by agents that share one graph.
+Person: <input id="person" value="rene" size="10">
+<button onclick="loadAll()">Load</button>
+<button onclick="rebuild()">Rebuild my plan</button>
+<button onclick="refresh()">Scout: refresh data</button>
+<span id="status"></span></p>
+<div class="cols">
+  <div class="card"><h2>My plan</h2><div id="plan"></div></div>
+  <div class="card"><h2>Who to meet (the path is the reason)</h2><div id="meet"></div></div>
+  <div class="card"><h2>Who I already met</h2><div id="met"></div></div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+async function get(url, opts) {
+  const r = await fetch(url, opts);
+  if (!r.ok) { const t = await r.text(); throw new Error(t); }
+  return r.json();
+}
+function person() { return $("person").value || "rene"; }
+async function loadAll() {
+  $("status").textContent = "";
+  try {
+    const plan = await get(`/api/plan/${person()}`);
+    $("plan").innerHTML = plan.talks.map(t =>
+      `<div class="talk"><span class="when">${t.starts}-${t.ends}</span> <b>${t.title}</b><br>${t.room} · ${t.speakers.join(", ")}${t.planned ? " · planned" : ""}</div>`).join("") || "No talks.";
+    const mm = await get(`/api/matchmake/${person()}`);
+    $("meet").innerHTML = mm.matches.map(m =>
+      `<div class="talk"><b>${m.name}</b> (${m.company}) · score ${m.score}` +
+      (m.paths.length ? `<code class="path">${m.paths[0].text}</code>` : "") + `</div>`).join("") || "No matches yet.";
+    const met = await get(`/api/met/${person()}`);
+    $("met").innerHTML = met.met.map(m =>
+      `<div class="talk"><b>${m.name}</b> · ${m.at}<br>${m.note}</div>`).join("") || "Nobody yet.";
+  } catch (e) { $("status").innerHTML = `<span class="err">${e.message}</span>`; }
+}
+async function rebuild() { await get(`/api/plan/${person()}/rebuild`, {method: "POST"}); loadAll(); }
+async function refresh() {
+  const r = await get(`/api/scout/refresh`, {method: "POST"});
+  $("status").textContent = " Scout changes: " + (r.changes.join(" | ") || "none");
+  loadAll();
+}
+loadAll();
+</script>
+</body>
+</html>
