@@ -47,14 +47,12 @@ Build requirements:
 - Tree, started ~10:40 AM: PR 2 branch tree/expand-graph-smarts. Richer seed data, talk explanations, icebreakers, people_by_company, talks_by_speaker, full test suite. Areas: graph/, tests/, agents/planner.py, agents/matchmaker.py. (Also folds in: MeetingIn.at validation in graph/queries.py, best-per-slot wording in planner output.)
 - Tree, queued after PR 2: PR 3 branch tree/whimsical-ui. Visual board UI plus plan add/drop endpoints and changes feed. Area: app/.
 - Tree, queued after PR 3: PR 4 branch tree/docs-demo-refresh. README and DEMO.md refresh. Areas: README.md, DEMO.md.
-- Done, Tree: PR #1 (trueforge-schema-pass) open. Model field and mcp_servers shapes aligned to the TrueForge docs. Qodo installed on this repo; PR #1 is waiting on a Qodo review (trigger comment posted).
-- Mac session (rene lane), started ~10:53 AM PT Oct 24: Scout stale edge cleanup. Branch rene/scout-stale-edges. Areas: agents/scout.py, ingest/. Status: claimed, not yet editing.
-- Mac session (rene lane), started ~10:53 AM PT Oct 24: Pin requirements.txt plus Python version note. Branch rene/pin-requirements. Area: requirements.txt (.python-version if needed). Status: claimed, not yet editing.
+- Done, Tree: PR #1 (trueforge-schema-pass) merged. PRs #5 (expand-graph-smarts), #6 (whimsical-ui), #7 (docs-demo-refresh) merged.
+- Done, Mac session (rene lane): Scout stale edge cleanup. PR #8 branch rene/scout-stale-edges. Areas: agents/scout.py, ingest/. Verified: smoke 3/3, probe 6/6 on scratch graph, runner end to end. Ready for review.
+- Done, Mac session (rene lane): Pin requirements.txt plus Python version note. PR #9 branch rene/pin-requirements. Areas: requirements.txt, .python-version (new). Verified: fresh project venv installs this file, smoke 3/3. Ready for review.
 
-### FREE to claim (suggested for the Mac session)
+### FREE to claim
 
-- Scout stale edge cleanup: when a talk moves or disappears, remove stale ABOUT/GIVES edges so the graph never keeps ghost talks. Area: agents/scout.py, ingest/. (Tree is not in these files except planner/matchmaker; scout.py is free.)
-- Pin requirements.txt and note the Python version in README or a .python-version file. Area: requirements.txt. Small and safe.
 - TrueForge field check, round 2: the HTTP tool entries (hallway_refresh, hallway_plan, hallway_matchmake, hallway_met) and the send_intro approval flag still have no documented shape. The workshop or the running harness can settle them. Area: trueforge/ (coordinate with PR #1 before editing; the files are in that open PR).
 - FalkorDB MCP wiring test: run the FalkorDB MCP server locally and confirm a TrueForge agent can query the graph through it. No repo files needed unless config changes land in mcp/servers.json.
 
@@ -65,3 +63,5 @@ Build requirements:
 ## Work log
 
 - 2026-10-24 ~10:52 AM PT, Tree: created this board at Rene's direction so both agents can work at the same time. Expansion PRs 2 to 4 claimed above.
+- 2026-10-24 ~11:05 AM PT, Mac session: Scout stale edge cleanup finished as PR #8. _upsert_talk reconciles GIVES and ABOUT edges, merges new rooms, refresh reports feed-missing talks as kept. Probe 6/6 and smoke 3/3 on live FalkorDB via colima plus docker compose. Demo graph reseeded after.
+- 2026-10-24 ~11:05 AM PT, Mac session: requirements pin finished as PR #9. Exact pins verified with fresh project .venv on Python 3.12.15, smoke 3/3. Used .python-version (3.12) since README is Tree's lane.
