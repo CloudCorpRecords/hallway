@@ -27,17 +27,34 @@ Three agents, one FalkorDB graph (schema in `graph/schema.md`):
 - **Scout** keeps the conference data fresh. Talks move rooms and times;
   Scout re-fetches the schedule and upserts it, reporting every change.
 - **Planner** builds your day from talks that match your interests and never
-  double-books you, checking each pick against your planned talks. When
-  Scout reports a change, Planner repairs the plan and says what it cost.
+  double-books you, checking each pick against your planned talks. Every
+  pick carries its reason (the interests it matched), printed next to the
+  talk, so the plan explains itself. When Scout reports a change, Planner
+  repairs the plan and says what it cost.
 - **Matchmaker** suggests who to meet. Every suggestion carries its graph
   path as the reason: you, to a topic, to a talk, to the person speaking on
-  it. Three hops, on screen, auditable. It reads the graph's MET edges so it
-  never suggests someone you already met, and its intro drafts stop at a
-  human approval gate before anything is sent.
+  it. Three hops, on screen, auditable. It also writes you an icebreaker for
+  each person, generated deterministically from the shared path: the common
+  topic and the talk that connects you, with its time and room. It reads the
+  graph's MET edges so it never suggests someone you already met, and its
+  intro drafts stop at a human approval gate before anything is sent.
 
-The money queries live in `graph/queries.py`. Matchmaking returns the nodes
+The queries live in `graph/queries.py`. Matchmaking returns the nodes
 and the path, not just an answer, because an answer you cannot trace is a
-rumor.
+rumor. The same module answers the directory questions (who works at a
+company, what a speaker is giving), explains every talk it offers, and
+builds the icebreakers.
+
+## The board
+
+The web app (`app/`) is a one-page board with a warm, friendly face: the
+whole day as a timeline of talk cards colored by topic, your picks glowing
+green, Add and Drop buttons that edit your plan in place (a clash comes
+back as a plain-language refusal naming the talk in the way), a Who to meet
+panel where each card shows the connection as a breadcrumb trail (You,
+topic, talk, person) with its icebreaker and the full graph path one click
+deeper, a Who I already met memory panel, and a Scout banner that appears
+when the last schedule refresh moved something.
 
 ## Architecture: where the harness ends and the graph begins
 
@@ -113,19 +130,30 @@ python -m agents.runner --person rene --noninteractive
 # 4. Web app
 uvicorn app.main:app --port 8000    # http://localhost:8000
 
-# 5. Smoke tests (need FalkorDB running)
-python tests/test_smoke.py
+# 5. Tests (need FalkorDB running)
+python tests/test_smoke.py    # the original 3 smoke tests
+python tests/test_full.py     # the full suite: 14 tests over queries,
+                              # agents, icebreakers and Scout
 ```
 
-## Status of this scaffold
+## Status
 
-Real and tested (against a live FalkorDB 6.0.3 module in redis-server
-7.4.2, smoke suite 3/3): the graph layer (schema, seed, the four money
-queries with path rendering), Scout's change detection, Planner's clash
-free planning and repair, Matchmaker's drafting and approval adapter, the
-FastAPI app and page, and the deterministic runner end to end.
-Structured and documented, waiting on venue accounts: the TrueForge
-agent.json definitions in `trueforge/`, the MCP server configs in `mcp/`,
-Bright Data live keys (fixtures stand in), OpenAI credits, the GitHub
-repo and the Qodo app. BUILD-PLAN.md is the runbook that flips each one
+Real and tested against a live FalkorDB (redis-server with the official
+FalkorDB module): the graph layer (schema, seed, the money queries with
+path rendering, talk explanations, company and speaker directory queries,
+deterministic icebreakers), Scout's change detection, Planner's clash free
+planning and repair, Matchmaker's suggestions, icebreakers, drafting and
+approval adapter, the board UI with in-place plan editing, and the
+deterministic runner end to end. The sample conference now runs 18 people
+and 19 talks, with a parallel choice in every slot. The test suite is
+tests/test_full.py (14 tests, all passing) alongside the original smoke
+tests (3/3); both run against scratch graphs and never touch the demo
+graph.
+
+The expansion landed as small pull requests, in flight as of judging:
+PR #2 (richer data, smarter queries, icebreakers, the full test suite),
+PR #3 (the board), and this PR (docs). Structured and documented, waiting
+on venue accounts: the TrueForge agent.json definitions in `trueforge/`,
+the MCP server configs in `mcp/`, Bright Data live keys (fixtures stand
+in), OpenAI credits. BUILD-PLAN.md is the runbook that flips each one
 live. DEMO.md is the stage script.
