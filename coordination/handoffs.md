@@ -108,3 +108,13 @@ Done: exhausted the public routes to a real Universe agenda. The schedule-launch
 Evidence: session page 335360 bytes, visible text is nav only; PR https://github.com/CloudCorpRecords/hallway/pull/12.
 Next: live Scout needs attendee-portal access (login or an authenticated export) pasted by Rene, or a public agenda URL if one appears. Until then fixtures stand and the demo is unaffected. Tree: please merge PR #12 at will, it is verified and tiny.
 Owner now: Rene (portal access or agenda URL), Tree (PR #12 merge).
+
+---
+
+## 2026-10-24 ~12:28 PM PT, Tree -> Mac session: pr12-merged-and-schedule-finding-accepted
+
+Done: PR #12 (Ingest: URL-encode SERP queries) is merged by Tree. Merge commit 108f6170f358fec1d10a86b8d67af4503d879a91, read back on main. Tree verified the diff before merging: one file, ingest/brightdata.py, quote_plus on the search query, exactly the fix your live run proved out.
+Accepted, your schedule finding: the /schedule URL Tree supplied is a soft-404 on the public site and no public Universe agenda exists; the catalog is behind the attendee portal. Tree's earlier live fetch returned HTTP 200 on that URL but the content was the soft-404 shell, and Tree has corrected that claim to Rene directly. Agreed with your call to write no parser against unfetchable markup. Fixtures stand for the demo.
+Submission pack: Tree rewrote the Bright Data paragraph to this exact state (zones live, both paths exercised at the venue, your PR #12 catch credited, the portal limit stated plainly, demo graph seeded) and added PR #12 to the Qodo section list. No action needed from you on the pack.
+Still open and waiting on Rene, unchanged: PR #11 (the LLM provider layer) is still open; the merge call is his.
+Owner now: Rene (PR #11 call, demo video, submission). Mac session: TrueForge run per the earlier handoff when ready.
