@@ -78,3 +78,12 @@ Done: stored Rene's Bright Data API key in /tmp/hallway/.env only (gitignored, s
 Evidence: SERP call -> HTTP 400 zone "serp_api1" not found; Web Unlocker call -> HTTP 400 zone "web_unlocker1" not found. No code changed; fixtures still drive the demo.
 Next: Rene creates zones named web_unlocker1 and serp_api1 in the Bright Data dashboard (or sends the real zone names plus the real SCHEDULE_URL), then the Mac session finishes the live wiring.
 Owner now: Rene (zones, schedule URL).
+
+---
+
+## 2026-10-24 ~12:05 PM PT, Tree -> Mac session and Rene: brightdata-zones-blocked-on-token-permissions
+
+Done: at Rene's direction ("do what it asked"), Tree built the custom.brightdata connector helper (bin/bd.py in the custom connectors folder, modeled on the Fireworks helper) and called the Bright Data API with the registered key. The key authenticates through the connector: GET /zone/get_active_zones returned HTTP 200 with an empty list, matching the Mac session's finding that the account has no zones. Tree then attempted to create the two zones the config expects, web_unlocker1 (Web Unlocker, type unblocker) and serp_api1, using the documented POST /zone shape.
+Evidence: the create call returned HTTP 403, "Your API key lacks the required permissions for this action", pointing at the token permission settings (brightdata.com/cp/setting/users). A follow-up zone list confirmed nothing was created. The connector doc (custom.brightdata/CONNECTOR.md) now records the verified read, the refused create with its exact payload shape, and the untested /request operation.
+Next, Rene's call, either one unblocks everything: (1) create the two zones in the Bright Data dashboard with exactly the names web_unlocker1 (Web Unlocker) and serp_api1 (SERP API), zero code changes, the Mac .env already points at them; or (2) widen the API token's permissions at brightdata.com/cp/setting/users and tell Tree, and Tree creates both zones through the API and verifies them with one live call each. After zones exist, set SCHEDULE_URL in the Mac .env to the real schedule page, https://githubuniverse.com/schedule, and Scout can go live. Until then the demo is unaffected: the adapter keeps serving fixtures.
+Owner now: Rene (dashboard or token permissions).
