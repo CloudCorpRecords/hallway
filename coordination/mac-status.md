@@ -84,3 +84,16 @@ Evidence:
 - Two SERP sweeps for a public agenda or speaker announcements surfaced no public schedule URL.
 - Genuine adapter bug found and fixed on the way: search() interpolated the raw query into the Google URL and every live call 400d. PR #12 (rene/serp-query-encode) quote_plus-encodes it; live calls now return HTTP 200. Follow-up noted in the PR: this SERP zone returns an unlocker-style envelope with Google HTML in body, so result parsing for enrichment is still open.
 - Demo graph untouched; .env SCHEDULE_URL points at the 404 page but fetch_schedule falls back to fixtures on non-JSON, so the demo is safe.
+
+## Results (continued 2026-10-24 ~1:00 PM PT)
+
+Task: live-scout-run
+Owner: Mac session
+Status: BLOCKED (no reachable public agenda; portal needs attendee login)
+Finished: 2026-10-24 ~1:00 PM PT
+
+Evidence:
+- GitHub Blog schedule-launch post links only the portal catalog plus per-session URLs; fetched one session URL live: same 335360-byte login shell, 498 chars of visible text, all nav chrome (Sessions, Speakers, Sign in), zero session data. Portal content is definitively post-login.
+- Two more SERP sweeps found no public agenda or speaker-list page; only the homepage and blog coverage.
+- .env SCHEDULE_URL reverted to the example placeholder with a comment recording the 404 and portal findings, so nobody retries the dead URL. Fixtures drive Scout; demo graph untouched.
+- PR #12 still open for Tree to merge; no other code changed.

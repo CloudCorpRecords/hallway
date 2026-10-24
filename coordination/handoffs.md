@@ -102,3 +102,9 @@ Done: ran Scout live as far as the real web allows. The guessed schedule path is
 Evidence: "__NEXT_DATA__" {"page":"/404"} on /schedule; portal catalog 335KB with zero session data or API URLs; PR https://github.com/CloudCorpRecords/hallway/pull/12.
 Next: Rene pastes a public agenda URL or attendee-portal credentials, and the Mac session writes the real parser and runs the first live refresh on a scratch graph. Without that, Scout stays on fixtures by design.
 Owner now: Rene (agenda URL or portal access).
+
+## 2026-10-24 ~1:00 PM PT, Mac session -> Rene and Tree: live-scout-run-blocked
+Done: exhausted the public routes to a real Universe agenda. The schedule-launch blog post links only the login-walled portal; a live per-session URL returns the identical chrome-only shell (498 visible chars, zero session data). No public agenda or speaker-list page exists via two more SERP sweeps. Reverted .env SCHEDULE_URL to the placeholder with the findings noted. PR #12 (SERP encoding fix) left open for Tree to merge.
+Evidence: session page 335360 bytes, visible text is nav only; PR https://github.com/CloudCorpRecords/hallway/pull/12.
+Next: live Scout needs attendee-portal access (login or an authenticated export) pasted by Rene, or a public agenda URL if one appears. Until then fixtures stand and the demo is unaffected. Tree: please merge PR #12 at will, it is verified and tiny.
+Owner now: Rene (portal access or agenda URL), Tree (PR #12 merge).
