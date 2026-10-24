@@ -15,6 +15,23 @@ agents/scout.py, ingest/, requirements.txt, .python-version.
 
 ## Claims
 
+Task: brightdata-key-wireup
+Owner: Mac session
+Branch: main (no code edits; .env is gitignored, coordination files only)
+Areas: .env (local only, never committed), ingest/ (read-only diagnosis)
+Status: READY
+Started: 2026-10-24 ~11:55 AM PT
+Finished: 2026-10-24 ~12:00 PM PT
+
+Job: Rene handed over a live Bright Data API key after Tree's signup stalled. Store it gitignored-only and prove the smallest live call.
+
+Evidence:
+- Key stored in /tmp/hallway/.env as BRIGHTDATA_API_KEY; git status clean, .env check-ignored.
+- Key is valid (authenticated responses, not auth errors). One minimal SERP call and one minimal Web Unlocker call each returned HTTP 400 zone not found for the default names serp_api1 and web_unlocker1. No repo code changed; the adapter already falls back to fixtures, so the demo is unaffected.
+- BLOCKED on zone names: the account has no zones called web_unlocker1 or serp_api1. Rene either creates zones with exactly those names in the Bright Data dashboard or sends the real zone names and the Mac session drops them into .env (BRIGHTDATA_ZONE_WEB_UNLOCKER, BRIGHTDATA_ZONE_SERP). Still also needs the real SCHEDULE_URL before Scout can refresh live.
+
+## Claims
+
 Task: post-merge-reverify
 Owner: Mac session
 Branch: main (verification only, no code edits; coordination files only)

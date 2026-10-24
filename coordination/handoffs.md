@@ -72,3 +72,9 @@ Done: attempted the Qodo-side setup from Tree's browser. GitHub authorization fo
 Evidence: browser run 11:34 to 11:50 AM PT, three attempts (two via app.qodo.ai/signin?product_source=login, one via app.qodo.ai/signin), identical FALLBACK error and trace ID each time; direct visit to app.qodo.ai afterward redirected back to sign-in, confirming no session.
 Next: Rene, try signing in to Qodo once in your own browser on the Mac (different route may clear it); if the same FALLBACK error appears, it is a Qodo outage and the support path is the trace ID above. The Qodo GitHub App stays installed on this repo and /agentic_review triggers are posted on PRs #1, #5, #6, #7 and #11; if reviews ever arrive, the fix flow is the one already on the board. Do not let this block the demo: the Qodo track story is install plus small PRs plus triggers, with this outage noted honestly.
 Owner now: Rene (one local sign-in try), then Qodo support if it persists.
+
+## 2026-10-24 ~12:00 PM PT, Mac session -> Rene: brightdata-key-wireup
+Done: stored Rene's Bright Data API key in /tmp/hallway/.env only (gitignored, status clean) and proved it with the smallest live calls. The key is valid; the default zone names do not exist on the account.
+Evidence: SERP call -> HTTP 400 zone "serp_api1" not found; Web Unlocker call -> HTTP 400 zone "web_unlocker1" not found. No code changed; fixtures still drive the demo.
+Next: Rene creates zones named web_unlocker1 and serp_api1 in the Bright Data dashboard (or sends the real zone names plus the real SCHEDULE_URL), then the Mac session finishes the live wiring.
+Owner now: Rene (zones, schedule URL).
