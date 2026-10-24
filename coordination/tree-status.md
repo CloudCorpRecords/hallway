@@ -1,10 +1,11 @@
 # Tree status
 
 Owner: Tree. Only Tree edits this file.
-Status: READY, 2026-10-24 ~11:33 AM PT (coordination kit live, current main re-verified, MCP wiring tested end to end; see Evidence).
+Status: WIP, 2026-10-24 ~11:40 AM PT (task llm-provider-layer claimed; see Now).
 
 ## Now
 
+- WIP: llm-provider-layer. Building agents/llm.py (OpenAI or Fireworks, Fireworks GLM default), wiring it into the Matchmaker intro draft and a Planner plan summary, updating the TrueForge agent.json models and provider docs. Branch tree/llm-provider. Claim entry is in coordination/handoffs.md.
 - DONE: coordination kit on main (commit 16a5a59): coordination/PROTOCOL.md, tree-status.md, mac-status.md, handoffs.md, plus the pointer section at the end of COORDINATION.md.
 - DONE: main re-verified from a fresh clone of d2366df (the Mac session's latest board commit): full suite and smoke green, runner end to end (details in Evidence).
 - DONE with one fix: MCP wiring test. The FalkorDB entry in mcp/servers.json pointed at a package that does not exist (`uvx falkordb-mcp`; PyPI and npm both 404). The official server is `@falkordb/mcpserver` on npm. Fix is in PR #10 (branch tree/mcp-servers-fix), left open for Rene to merge. Until it merges, run the server directly: `npx -y @falkordb/mcpserver@latest` with FALKORDB_HOST=localhost and FALKORDB_PORT=6379. The Bright Data entry is correct as declared.

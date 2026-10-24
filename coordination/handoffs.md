@@ -47,3 +47,10 @@ TrueForge venue run sequence (Mac session):
 8. Confirm mcp/servers.json resolves the FalkorDB MCP server: the falkordb entry runs npx -y @falkordb/mcpserver@latest with FALKORDB_HOST=localhost and FALKORDB_PORT=6379 (fixed by PR #10). Proof method from the wiring test: complete the MCP handshake and run the read-only count MATCH (p:Person) RETURN count(p) through query_graph_readonly; on the seeded sample graph it returns 18.
 9. Run one matchmake through the harness for person rene and check the suggestion comes back with its graph path (person, topic, talk, person). Then have Matchmaker draft an intro and confirm the approval gate holds: the send_intro step must stop for a human yes and send nothing before it.
 10. Fallback if the harness stalls: the same loop runs without it: python -m agents.runner --person rene --noninteractive (README Quickstart; also the DEMO.md stage safety net).
+
+## 2026-10-24 ~11:40 AM PT, Tree -> Mac session: llm-provider-layer
+
+Done: claiming this task before building. Rene claimed the OpenAI credit, but his OpenAI account balance is negative, so an OpenAI key cannot be used live today. Tree is building a provider layer (new agents/llm.py) that speaks the OpenAI-compatible chat completions shape to either OpenAI or Fireworks, defaulting to Fireworks with model accounts/fireworks/models/glm-5p3-flash, wired into the Matchmaker intro draft and a Planner plan summary, with the current deterministic text as the no-key and on-failure fallback. The TrueForge agent.json model fields move to the Fireworks GLM and trueforge/README.md gains provider switching docs.
+Evidence: claim only; the test evidence lands with the PR.
+Next: one PR on branch tree/llm-provider (full suite, smoke, FastAPI matchmake check, and a live Fireworks check through the local fw-proxy), then a wrap-up handoff here with the Mac session follow-ups.
+Owner now: Tree (provider layer), Mac session (TrueForge local run after).
