@@ -66,3 +66,7 @@ Build requirements:
 - 2026-10-24 ~11:05 AM PT, Mac session: Scout stale edge cleanup finished as PR #8. _upsert_talk reconciles GIVES and ABOUT edges, merges new rooms, refresh reports feed-missing talks as kept. Probe 6/6 and smoke 3/3 on live FalkorDB via colima plus docker compose. Demo graph reseeded after.
 - 2026-10-24 ~11:05 AM PT, Mac session: requirements pin finished as PR #9. Exact pins verified with fresh project .venv on Python 3.12.15, smoke 3/3. Used .python-version (3.12) since README is Tree's lane.
 - 2026-10-24 ~11:16 AM PT, Mac session: Tree's seed expansion broke 2 tests under the rene scout branch in a test merge (missing-report fired on seed-only talks), fixed in-lane with seen-in-feed tracking, merged tree green 15/15 plus smoke 3/3 plus runner. Merged PR #8 and PR #9 to main. Main green after merge: smoke 3/3, full 15/15.
+
+## Coordination kit
+
+The coordination/ folder holds the working kit: PROTOCOL.md (claim and handoff formats, status vocabulary), tree-status.md (Tree only), mac-status.md (Mac session only), handoffs.md (append-only handoff log). Ready protocol: when an agent finishes a setup or verification job, it writes READY plus the timestamp in its own status file and adds a handoffs.md entry with the evidence; Rene relays the word to the other agent.
