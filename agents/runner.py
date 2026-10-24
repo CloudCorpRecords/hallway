@@ -4,10 +4,14 @@
    (agents/trueforge_adapter.py), the run is annotated as harness ready.
    At the venue the harness executes this same loop with MCP tools, sandbox
    and the approval gate. The graph work is identical either way.
-2. Local LLM mode: if OPENAI_API_KEY is set, the openai package adds a short
-   natural language summary on top of the deterministic results.
+2. LLM mode: if an LLM provider is configured (agents/llm.py; Fireworks
+   with glm-5p3-flash by default, OpenAI selectable by env), the
+   Matchmaker intro draft for the top match and a short Planner summary
+   of the day come from the model. The run labels each with its source,
+   so an LLM draft is never mistaken for the template.
 3. Deterministic demo mode (default offline): walks Scout, Planner and
-   Matchmaker over the graph with no LLM at all. This is the mode that must
+   Matchmaker over the graph with no LLM at all. Every LLM touch falls
+   back to this mode's text on any problem. This is the mode that must
    never fail on stage.
 
 Usage: python -m agents.runner [--person rene] [--noninteractive]
@@ -20,7 +24,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from graph import queries, seed  # noqa: E402
-from agents import matchmaker, planner, scout, trueforge_adapter  # noqa: E402
+from agents import llm, matchmaker, planner, scout, trueforge_adapter  # noqa: E402
 
 
 def _person_name(g, person_id):
@@ -36,30 +40,6 @@ def _ensure_seeded(g):
         print("(graph was empty: seeded the sample conference)")
 
 
-def _llm_summary(person, plan, matches):
-    """Optional OpenAI polish. Returns None on any problem, by design."""
-    key = os.environ.get("OPENAI_API_KEY", "").strip()
-    if not key:
-        return None
-    try:
-        from openai import OpenAI
-        client = OpenAI(api_key=key)
-        plan_txt = "; ".join(f"{t['starts']} {t['title']}" for t in plan[:4])
-        match_txt = "; ".join(m["name"] for m in matches[:3])
-        resp = client.chat.completions.create(
-            model=os.environ.get("OPENAI_MODEL", "gpt-4o-mini"),
-            messages=[{"role": "user", "content":
-                       f"In two short sentences, brief {person} on their "
-                       f"conference day. Talks: {plan_txt}. People to meet: "
-                       f"{match_txt}."}],
-            max_tokens=120,
-        )
-        return resp.choices[0].message.content.strip()
-    except Exception as exc:  # never let polish break the demo
-        print(f"(OpenAI summary skipped: {exc})")
-        return None
-
-
 def main():
     parser = argparse.ArgumentParser(description="Run the Hallway agents")
     parser.add_argument("--person", default="rene")
@@ -70,6 +50,7 @@ def main():
 
     tf = trueforge_adapter.describe()
     print(f"Agent harness: {tf['sdk'] or 'local fallback'} ({tf['note']})")
+    print(f"LLM provider: {llm.describe()}")
 
     g = seed.connect()
     _ensure_seeded(g)
@@ -89,6 +70,11 @@ def main():
             print(f"    why: {t['why']}")
     if repair["dropped"]:
         print(f"  dropped after schedule change: {repair['dropped']}")
+    summary = planner.plan_summary(me, repair["plan"])
+    if summary:
+        cfg = llm.config()
+        print(f"\n== Plan summary (LLM: {cfg['provider']} / "
+              f"{cfg['model']}) ==\n  {summary}")
 
     print("\n== Matchmaker: who to meet, and why (the path is the reason) ==")
     matches = matchmaker.suggest(g, args.person)
@@ -104,15 +90,12 @@ def main():
         print(f"  {met['name']} at {met['at']}: {met['note']}")
 
     if matches:
-        draft = matchmaker.draft_intro(me, matches[0])
+        draft, source = matchmaker.intro_draft_with_source(me, matches[0])
         verdict = matchmaker.request_approval(
             draft, noninteractive=args.noninteractive)
         print(f"\n== Intro approval ==\n  draft: {draft}")
+        print(f"  draft source: {source}")
         print(f"  verdict: {verdict}")
-
-    summary = _llm_summary(me, repair["plan"], matches)
-    if summary:
-        print(f"\n== Assistant summary (OpenAI) ==\n  {summary}")
     return 0
 
 

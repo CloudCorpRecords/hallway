@@ -267,6 +267,13 @@ TESTS = [
     test_met_list_seeded_memory,
 ]
 
+# The LLM provider layer tests (tests/test_llm.py) are mocked-transport
+# only, so they belong in the full suite: the fallback guarantees they pin
+# down are part of the demo contract.
+from tests.test_llm import TESTS as LLM_TESTS  # noqa: E402
+
+TESTS = TESTS + LLM_TESTS
+
 
 def main():
     passed, failed = 0, []

@@ -1,8 +1,14 @@
 """Planner: builds the attendee's day from interest matched, clash free talks,
 and repairs it when Scout reports the schedule moved underneath it.
+
+plan_summary() is the one LLM touch: when a provider is configured
+(agents/llm.py), the model writes a short natural language summary of the
+plan. Without a provider, or on any call failure, it returns None and the
+caller shows the plan itself, unchanged.
 """
 
 from graph import queries
+from agents import llm
 
 
 def build_plan(g, person_id):
@@ -32,3 +38,28 @@ def repair_plan(g, person_id):
         "dropped": sorted(before - after),
         "added": sorted(after - before),
     }
+
+
+def plan_summary(person_name, plan):
+    """A two or three sentence summary of the plan from the configured
+    LLM provider, or None when no provider is configured, the plan is
+    empty, or the call fails."""
+    if not plan or not llm.configured():
+        return None
+    lines = "; ".join(
+        f"{t['starts']} {t['title']} in {t['room']}"
+        + (f" ({t['why']})" if t.get("why") else "")
+        for t in plan)
+    messages = [
+        {"role": "system",
+         "content": "You brief conference attendees on their day. "
+                    "Two or three short sentences. Plain words, "
+                    "no invented facts."},
+        {"role": "user",
+         "content": (f"Brief {person_name} on their conference day. "
+                     f"Their planned talks, in order: {lines}. "
+                     "Mention the shape of the day, not every talk.")},
+    ]
+    # 600, not a tight budget: glm-5p3-flash spends reasoning tokens
+    # against max_tokens before any content appears (see agents/llm.py).
+    return llm.chat(messages, max_tokens=600)
