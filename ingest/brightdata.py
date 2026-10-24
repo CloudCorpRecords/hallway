@@ -96,6 +96,20 @@ def search(query):
     return data
 
 
+def _normalize_talk(talk):
+    """Fill defaults so Scout never crashes on a ragged feed entry."""
+    return {
+        "id": talk.get("id", ""),
+        "title": talk.get("title", ""),
+        "starts": talk.get("starts", ""),
+        "ends": talk.get("ends", ""),
+        "room": talk.get("room") or "Main Stage",
+        "speaker_ids": list(dict.fromkeys(talk.get("speaker_ids") or [])),
+        "topics": list(dict.fromkeys(talk.get("topics") or [])),
+        "blurb": talk.get("blurb", ""),
+    }
+
+
 def fetch_schedule():
     """Return (talks, meta). talks are dicts shaped like graph/seed TALKS."""
     url = os.environ.get("SCHEDULE_URL",
@@ -103,12 +117,14 @@ def fetch_schedule():
     raw = fetch_url(url)
     try:
         data = json.loads(raw)
-        return data["talks"], {"source": data.get("source", url),
-                               "fetched_via": data.get("fetched_via", "live")}
+        talks = [_normalize_talk(t) for t in data["talks"] if t.get("id")]
+        return talks, {"source": data.get("source", url),
+                       "fetched_via": data.get("fetched_via", "live")}
     except (ValueError, KeyError):
         data = json.loads((FIXTURES / "schedule_page.json").read_text())
-        return data["talks"], {"source": data.get("source", url),
-                               "fetched_via": "fixture-fallback"}
+        talks = [_normalize_talk(t) for t in data["talks"] if t.get("id")]
+        return talks, {"source": data.get("source", url),
+                       "fetched_via": "fixture-fallback"}
 
 
 def mcp_config_snippet():
