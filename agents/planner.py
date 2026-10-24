@@ -6,12 +6,19 @@ from graph import queries
 
 
 def build_plan(g, person_id):
-    """Pick the best talk in every slot. Returns the planned talks in order."""
+    """Pick the best talk per slot. Returns the planned talks in order,
+    each carrying its why: the interest reasons Planner picked it."""
     queries.clear_plan(g, person_id)
     for talk in queries.talks_for(g, person_id):
         queries.plan_talk(g, person_id, talk["id"])
     planned_ids = {p["id"] for p in queries.planned_talks(g, person_id)}
-    return [t for t in queries.talks_for(g, person_id) if t["id"] in planned_ids]
+    plan = [t for t in queries.talks_for(g, person_id)
+            if t["id"] in planned_ids]
+    for talk in plan:
+        reasons = talk.get("reasons") or [
+            f"matches your interest in {name}" for name in talk["topics"]]
+        talk["why"] = "; ".join(reasons)
+    return plan
 
 
 def repair_plan(g, person_id):

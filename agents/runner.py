@@ -85,6 +85,8 @@ def main():
     repair = planner.repair_plan(g, args.person)
     for t in repair["plan"]:
         print(f"  {t['starts']}-{t['ends']}  {t['title']}  ({t['room']})")
+        if t.get("why"):
+            print(f"    why: {t['why']}")
     if repair["dropped"]:
         print(f"  dropped after schedule change: {repair['dropped']}")
 
@@ -94,6 +96,8 @@ def main():
         print(f"  {m['name']} ({m['company']}) score {m['score']}")
         for p in m["paths"][:1]:
             print(f"    path: {p['text']}")
+        if m.get("icebreaker"):
+            print(f"    icebreaker: {m['icebreaker']['line']}")
 
     print("\n== Memory: who I already met ==")
     for met in queries.met_list(g, args.person):

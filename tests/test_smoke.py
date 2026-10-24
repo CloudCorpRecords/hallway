@@ -1,7 +1,10 @@
 """Smoke tests for the Hallway graph layer.
 
 Runs against a real FalkorDB at FALKORDB_URL (default redis://localhost:6379)
-using a scratch graph so the demo graph is never touched.
+using a scratch graph so the demo graph is never touched. The smoke tests
+run against hallway_smoke (SCRATCH below), the scratch graph the suite
+selects instead of the HALLWAY_GRAPH demo default ("hallway"), so running
+them can never wipe the demo graph.
 
     python tests/test_smoke.py     # standalone, prints results
     pytest tests/test_smoke.py     # same assertions under pytest
