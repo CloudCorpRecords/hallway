@@ -1,15 +1,18 @@
 # Hallway demo script (stage, under 3 minutes of talking)
 
-Setup before going on: FalkorDB running, graph seeded fresh
-(`python -m graph.seed`), app running (`uvicorn app.main:app --port 8000`),
-the board open at http://localhost:8000, a terminal open as backup.
+Setup before going on: either launch the standalone desktop app
+(`open electron/dist/mac-arm64/Hallway.app`), or start FalkorDB, seed fresh
+(`python -m graph.seed`), run the app (`uvicorn app.main:app --port 8000`),
+and open the board at http://localhost:8000 (click **Reset Demo** in the top
+bar anytime to restore stage-start state). A terminal open as backup.
 Person field: rene. Interests on the record: MCP, AI agents, developer
 tools, Rust. Timings are cumulative; the whole talk track is about 2:40.
 
 ## Step 1. Who to meet, and the trail proves it (FalkorDB) 0:00 to 0:40
 
-Click **Load my day**. In the Who to meet panel, point at the top card
-(right now Diego Fuentes) and trace the breadcrumb trail with a finger:
+Click **Load my day** (and optionally **AI Day Briefing** to show Planner's
+two-sentence summary of the day). In the Who to meet panel, point at the top
+card (right now Diego Fuentes) and trace the breadcrumb trail with a finger:
 You, Rust, Rust CLIs That Feel Instant, Diego Fuentes. Then click
 "show the graph path" on that card.
 
@@ -32,11 +35,11 @@ Say: "Tom scores well on my topics, and he is nowhere in my suggestions,
 because we met at breakfast and Hallway wrote it into the graph as a MET
 edge. Every agent shares that memory, and it survives closing the laptop."
 
-Live beat, if the room is with you: record a meeting with the top
-suggestion from the terminal
-(`curl -X POST localhost:8000/api/met -H 'Content-Type: application/json' -d '{"a":"rene","b":"diego-fuentes","note":"Met in the hallway, swapped Rust CLI notes.","at":"10:24"}'`),
-click **Load my day** again, and watch that card leave the list while the
-name appears in the met panel.
+Live beat, right on the board: click **We met in the hallway** on Diego's
+card (or via terminal:
+`curl -X POST localhost:8000/api/met -H 'Content-Type: application/json' -d '{"a":"rene","b":"diego-fuentes","note":"Met in the hallway, swapped Rust CLI notes.","at":"10:24"}'`),
+and watch that card leave the suggestions list while Diego appears in the
+Who I already met panel.
 
 ## Step 3. Edit the plan, and get refused politely (Planner) 1:10 to 1:50
 
@@ -71,20 +74,22 @@ still with a reason on every talk. No being sent to the wrong room."
 ## Step 5. The intro that asks first, and the paper trail
 (TrueForge + Qodo) 2:30 to 2:55
 
-In the terminal run `python -m agents.runner --person rene
---noninteractive` and scroll to the intro at the end: Matchmaker's draft
-to the top match, stopped at the approval gate, verdict printed, nothing
-sent.
+Click **Draft intro (approval gate)** on the top match card (or in the
+terminal run `python -m agents.runner --person rene --noninteractive`):
+Matchmaker's grounded draft appears right on the card with the badge
+`HELD AT APPROVAL GATE (trueforge-approval-gate)`, showing the model source
+and confirming nothing is sent without explicit human approval.
 
 Say: "Agents that message people on your behalf should ask first. Under
 TrueForge that gate is the harness approval step, not a checkbox."
 
 Show the repo pull request list: small, single-purpose PRs (schema pass,
-graph expansion, the board, these docs), each one reviewed by Qodo, its
-findings fixed in follow-up commits.
+graph expansion, the board, these docs, Electron app), each one reviewed by
+Qodo, its findings fixed in follow-up commits.
 
 Say: "Everything you just saw shipped through pull requests an AI
 reviewer read first."
 
 Close: "Hallway. Your conference, run by agents that share one memory,
 and every answer comes with its path."
+

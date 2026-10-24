@@ -133,6 +133,33 @@
   .empty { color: #8a7f6c; font-style: italic; }
   #status { font-weight: 600; color: #38685f; }
   .err { color: #b3402a; font-weight: 700; }
+  .person-actions {
+    display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.6rem;
+  }
+  .intro-box {
+    display: none; margin-top: 0.65rem; background: #f4f1fb;
+    border: 2px solid #d5c8f0; border-radius: 14px; padding: 0.7rem 0.85rem;
+    font-size: 0.92rem;
+  }
+  .intro-box .gate-badge {
+    display: inline-block; background: var(--plum); color: #fff;
+    font-size: 0.74rem; font-weight: 800; padding: 0.12rem 0.55rem;
+    border-radius: 999px; letter-spacing: 0.05em; margin-bottom: 0.35rem;
+  }
+  .intro-box .source-tag {
+    font-size: 0.76rem; color: #6b6355; margin-left: 0.4rem; font-family: ui-monospace, monospace;
+  }
+  #briefing-box {
+    display: none; background: #eef9f6; border: 2px solid var(--teal);
+    border-radius: 16px; padding: 0.9rem 1.15rem; margin-bottom: 1.2rem;
+    box-shadow: var(--shadow);
+  }
+  #briefing-box .label {
+    font-weight: 800; color: var(--teal); font-size: 0.8rem; letter-spacing: 0.06em;
+  }
+  .dir-row {
+    display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.6rem;
+  }
 </style>
 </head>
 <body>
@@ -146,8 +173,10 @@
     <label for="person">Person</label>
     <input type="text" id="person" value="rene">
     <button onclick="loadAll()">Load my day</button>
+    <button class="ghost" onclick="briefMe()">AI Day Briefing</button>
     <button class="ghost" onclick="rebuild()">Rebuild my plan</button>
     <button class="ghost" onclick="refresh()">Scout: check for changes</button>
+    <button class="ghost small" onclick="resetDemo()" title="Reset graph to clean stage start">Reset Demo</button>
     <span id="status"></span>
   </div>
 </header>
@@ -157,6 +186,10 @@
     <ul id="scout-changes"></ul>
     <p style="margin:0.5rem 0 0">Your plan can be rebuilt against the new
     times with the button above.</p>
+  </div>
+  <div id="briefing-box">
+    <span class="label">PLANNER BRIEFING</span> <span id="briefing-source" style="font-size:0.78rem;color:#6b6355;font-family:ui-monospace,monospace"></span>
+    <div id="briefing-text" style="margin-top:0.3rem"></div>
   </div>
   <div id="notice"></div>
   <div class="board">
@@ -172,6 +205,14 @@
       <section class="panel">
         <h2>Who I already met <span class="sub">memory, written in the graph</span></h2>
         <div id="met"></div>
+      </section>
+      <section class="panel">
+        <h2>Company directory <span class="sub">graph lookup by company</span></h2>
+        <div class="dir-row">
+          <input type="text" id="company-input" value="GitHub" style="width:9rem">
+          <button class="small ghost" onclick="lookupCompany()">Find people</button>
+        </div>
+        <div id="company-results"></div>
       </section>
     </div>
   </div>
@@ -247,12 +288,18 @@ function renderMeet(matches) {
   $("meet").innerHTML = matches.map(m => {
     const ib = m.icebreaker;
     const path = (m.paths && m.paths.length) ? m.paths[0].text : "";
+    const pid = esc(m.person_id);
     return `<div class="person">
       <span class="score">score ${m.score}</span>
       <h3>${esc(m.name)}</h3> <span class="company">${esc(m.company || "")}</span>
       <div class="crumbs">${crumbTrail(m)}</div>
       ${ib && ib.line ? `<div class="icebreaker"><span class="label">ICE BREAKER</span><br>${esc(ib.line)}</div>` : ""}
       ${path ? `<details class="path"><summary>show the graph path</summary><code class="path">${esc(path)}</code></details>` : ""}
+      <div class="person-actions">
+        <button class="small ghost" onclick="draftIntro('${pid}')">Draft intro (approval gate)</button>
+        <button class="small add" onclick="markMet('${pid}', '${esc(m.name)}')">We met in the hallway</button>
+      </div>
+      <div class="intro-box" id="intro-${pid}"></div>
     </div>`;
   }).join("") || '<p class="empty">No matches yet. Tell Hallway what you are into.</p>';
 }
@@ -348,7 +395,94 @@ async function refresh() {
   }
 }
 
+async function markMet(otherId, otherName) {
+  notice("");
+  const note = `Met ${otherName} in the hallway and swapped notes.`;
+  try {
+    await get("/api/met", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({a: person(), b: otherId, note})
+    });
+    loadAll();
+  } catch (e) { notice(e.message); }
+}
+
+async function draftIntro(otherId) {
+  const box = $(`intro-${otherId}`);
+  if (!box) return;
+  box.style.display = "block";
+  box.innerHTML = "<em>Matchmaker is drafting your intro...</em>";
+  try {
+    const res = await get("/api/intro/draft", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({person_id: person(), other_id: otherId})
+    });
+    const ch = (res.approval && res.approval.channel) || "approval-gate";
+    box.innerHTML = `
+      <div>
+        <span class="gate-badge">HELD AT APPROVAL GATE (${esc(ch)})</span>
+        <span class="source-tag">${esc(res.source)}</span>
+      </div>
+      <div style="margin:0.35rem 0">${esc(res.draft)}</div>
+      <div style="font-size:0.8rem;color:#5b554b">Nothing is sent without your explicit approval.</div>
+    `;
+  } catch (e) {
+    box.innerHTML = `<span class="err">${esc(e.message)}</span>`;
+  }
+}
+
+async function briefMe() {
+  notice("");
+  const box = $("briefing-box");
+  box.style.display = "block";
+  $("briefing-text").innerHTML = "<em>Planner is summarizing your day...</em>";
+  $("briefing-source").textContent = "";
+  try {
+    const res = await get(`/api/plan/${person()}/summary`);
+    $("briefing-source").textContent = `(${res.source})`;
+    $("briefing-text").textContent = res.summary || "No planned talks yet.";
+  } catch (e) {
+    $("briefing-text").innerHTML = `<span class="err">${esc(e.message)}</span>`;
+  }
+}
+
+async function lookupCompany() {
+  const comp = ($("company-input").value || "").trim();
+  if (!comp) return;
+  const target = $("company-results");
+  target.innerHTML = "<em>Searching graph...</em>";
+  try {
+    const res = await get(`/api/company/${encodeURIComponent(comp)}`);
+    const people = res.people || [];
+    if (!people.length) {
+      target.innerHTML = `<p class="empty" style="margin:0.3rem 0">No people found at ${esc(comp)}.</p>`;
+      return;
+    }
+    target.innerHTML = people.map(p =>
+      `<div class="met-item"><b>${esc(p.name)}</b> <span class="company">(${esc(p.kind)})</span> · <code>${esc(p.handle)}</code></div>`
+    ).join("");
+  } catch (e) {
+    target.innerHTML = `<span class="err">${esc(e.message)}</span>`;
+  }
+}
+
+async function resetDemo() {
+  notice("");
+  $("status").textContent = "Resetting stage...";
+  $("briefing-box").style.display = "none";
+  try {
+    await get(`/api/demo/reset?person_id=${encodeURIComponent(person())}`, {method: "POST"});
+    await loadAll();
+    $("status").textContent = "Stage reset complete.";
+  } catch (e) {
+    $("status").innerHTML = `<span class="err">${esc(e.message)}</span>`;
+  }
+}
+
 loadAll();
+lookupCompany();
 </script>
 </body>
 </html>
