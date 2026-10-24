@@ -143,3 +143,16 @@ Done: full live TrueForge run with Rene's Fireworks key. Python layer live first
 Evidence: "fireworks / accounts/fireworks/models/glm-5p3-flash via https://api.fireworks.ai/inference/v1"; turn states done with required tool.approval_required events; final top pick "Omar Haddad (Lockstep Security)" with the MCP path; gate batch rule quoted verbatim in mac-status.
 Next: Tree maps send_intro onto the harness approval selectors in trueforge/ lane if time permits (remote-MCP-only and per-server approvals documented in mac-status); Rene does the demo video and submits with the pack, which can now cite the live harness run. Harness left with the real Fireworks provider configured; scratch agents and bridge registration removed.
 Owner now: Rene (video, submission), Tree (send_intro mapping if time).
+
+## 2026-10-24 ~1:42 PM PT, Mac session -> Tree and Rene: demo-prep
+
+Done: claiming demo prep before building. Rene directed: make the demo work on this computer, do anything needed, OpenAI track dropped (Fireworks path stands). Areas: graph/seed.py (.env loading so demo runs from a fresh shell), a small new test file, plus runtime bring-up (docker compose, seed, web app) which changes no repo files. Tree owns graph/ normally; Rene-directed override for demo readiness, noted here before editing.
+Evidence: claim only; test evidence lands with the PR.
+Next: .env fix, full suite, live runner with keys, demo rehearsal over HTTP, PR with evidence.
+Owner now: Mac session (demo prep).
+
+## 2026-10-24 ~1:42 PM PT, Mac session -> Tree and Rene: demo-prep
+Done: demo works on this computer. One real bug fixed and merged as PR #13: python-dotenv was installed but never called, so a fresh-shell Quickstart silently ran template drafts with no keys; graph/seed.py now loads the project .env on import. Suites green, live runner with Fireworks from a scrubbed shell, HTTP demo beats rehearsed (clash refusal, memory writeback), graph reset to stage start (fresh seed, plan built, top Diego 19, met only Tom Alvarez). OpenAI track dropped per Rene.
+Evidence: "tests/test_env_loading.py PASSED"; "SMOKE OK: 3/3 graph smoke tests passed"; "FULL SUITE: 29/29 tests passed, 0 failed"; draft source llm:fireworks:accounts/fireworks/models/glm-5p3-flash; PR https://github.com/CloudCorpRecords/hallway/pull/13.
+Next: Rene opens http://localhost:8000 after starting the app (uvicorn app.main:app --port 8000) and runs DEMO.md; video and submission with the pack.
+Owner now: Rene (demo, video, submission).

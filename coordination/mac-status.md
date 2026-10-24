@@ -59,6 +59,19 @@ Matches Tree's wiring evidence row for row. TrueForge can use the checked-in ent
 
 Follow coordination/PROTOCOL.md: keep the claim format, use the status vocabulary, and never mark READY or DONE without the verbatim test result or a link to it.
 
+## Results (demo prep, 2026-10-24 ~1:42 PM PT)
+
+Task: demo-prep
+Owner: Mac session
+Status: READY
+Finished: 2026-10-24 ~1:42 PM PT
+
+Evidence:
+- Fixed the demo blocker: python-dotenv was installed but never called, so a fresh-shell Quickstart silently ran template drafts with no keys. graph/seed.py (shared import for app, runner, seed CLI) now loads the project .env (PR #13 merged, DCO sign-off). tests/test_env_loading.py passes in a scrubbed env; suites SMOKE OK 3/3 and FULL SUITE 29/29.
+- Live runner from a fresh shell (env -i): plan summary (LLM: fireworks / accounts/fireworks/models/glm-5p3-flash), top Diego Fuentes score 19, draft source llm:fireworks, verdict pending at approval gate, Scout changes t6 and t11 exactly as DEMO.md narrates.
+- Demo rehearsal over HTTP: add t2 refused with the 409 clash message naming MCP in Production, drop t1 then add t2 succeeds; record meeting with Diego removes him from suggestions into the met panel.
+- Stage start reset: fresh seed (18 people, 19 talks, 9 topics, 1 meeting), plan built (11), top Diego 19, met only Tom Alvarez. FalkorDB container up via docker compose. OpenAI track dropped per Rene; Fireworks path stands.
+
 ## Results (TrueForge live run, 2026-10-24 ~1:25 PM PT)
 
 Task: trueforge-run (live, with Rene's Fireworks key)
