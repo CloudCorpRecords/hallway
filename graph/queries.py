@@ -198,13 +198,16 @@ def talks_for(g, person_id):
                           ignore_id=props["id"])
         if clash is not None:
             continue
+        matched = sorted(t for t in topics if t)
         out.append({
             "id": props["id"],
             "title": props["title"],
             "starts": props["starts"],
             "ends": props["ends"],
             "room": room,
-            "topics": sorted(t for t in topics if t),
+            "topics": matched,
+            "reasons": [f"matches your interest in {name}"
+                        for name in matched],
             "speakers": sorted(s for s in speakers if s),
             "planned": planned,
         })
@@ -238,6 +241,97 @@ def clear_plan(g, person_id):
     )
 
 
+# ---------- directory queries: companies and speakers ----------
+
+def people_by_company(g, company):
+    """Everyone who works at a company, by name. Speakers and attendees."""
+    res = g.query(
+        "MATCH (p:Person)-[:WORKS_AT]->(c:Company {name: $company}) "
+        "RETURN p.id, p.name, p.kind, p.handle ORDER BY p.name",
+        {"company": company},
+    )
+    return [{"person_id": r[0], "name": r[1], "kind": r[2], "handle": r[3]}
+            for r in res.result_set]
+
+
+def talks_by_speaker(g, person_id):
+    """Talks a person gives, in day order, with room and topics."""
+    res = g.query(
+        "MATCH (p:Person {id: $pid})-[:GIVES]->(talk:Talk)"
+        "-[:IN_ROOM]->(r:Room) "
+        "OPTIONAL MATCH (talk)-[:ABOUT]->(t:Topic) "
+        "RETURN talk.id, talk.title, talk.starts, talk.ends, r.name, "
+        "collect(t.name) ORDER BY talk.starts, talk.title",
+        {"pid": person_id},
+    )
+    return [{"id": r[0], "title": r[1], "starts": r[2], "ends": r[3],
+             "room": r[4], "topics": sorted(x for x in r[5] if x)}
+            for r in res.result_set]
+
+
+# ---------- icebreakers: an opener built from the shared path ----------
+
+def icebreaker(g, person_id, other_id):
+    """A deterministic opener for a matchmake pair, built from the graph.
+
+    The strongest evidence wins: a talk the other person gives on one of my
+    topics (the talk that connects us), then a shared interest, then a plain
+    fallback. No LLM: same graph in, same opener out.
+
+    Returns {person_id, other_id, name, topic, shared_topics, talk, line}
+    where talk is {id, title, starts, room, topic} or None.
+    """
+    res = g.query(
+        "MATCH (other:Person {id: $oid}) RETURN other.name",
+        {"oid": other_id},
+    )
+    other_name = res.result_set[0][0] if res.result_set else other_id
+    first = (other_name or "there").split()[0]
+
+    res = g.query(
+        "MATCH (me:Person {id: $pid})-[:INTERESTED_IN]->(t:Topic)"
+        "<-[:INTERESTED_IN]-(other:Person {id: $oid}) RETURN t.name",
+        {"pid": person_id, "oid": other_id},
+    )
+    shared = sorted(row[0] for row in res.result_set)
+
+    res = g.query(
+        "MATCH (other:Person {id: $oid})-[:GIVES]->(talk:Talk)"
+        "-[:ABOUT]->(t:Topic)<-[:INTERESTED_IN]-(me:Person {id: $pid}) "
+        "MATCH (talk)-[:IN_ROOM]->(r:Room) "
+        "RETURN talk.id, talk.title, talk.starts, r.name, t.name",
+        {"pid": person_id, "oid": other_id},
+    )
+    talk = None
+    if res.result_set:
+        # Prefer a talk on a topic we share, then earliest in the day.
+        # Sorting here keeps the opener deterministic across runs.
+        rows = sorted(
+            res.result_set,
+            key=lambda row: (0 if row[4] in shared else 1,
+                             row[2], row[1], row[4]))
+        tid, title, starts, room, topic = rows[0]
+        talk = {"id": tid, "title": title, "starts": starts,
+                "room": room, "topic": topic}
+
+    topic = talk["topic"] if talk else (shared[0] if shared else None)
+    if talk and topic in shared:
+        line = (f"Ask {first} about \"{talk['title']}\" ({talk['starts']}, "
+                f"{talk['room']}): you are both into {topic}, and it is "
+                f"the session where your interests meet.")
+    elif talk:
+        line = (f"Ask {first} about \"{talk['title']}\" ({talk['starts']}, "
+                f"{talk['room']}): it covers {topic}, one of your topics.")
+    elif topic:
+        line = (f"You are both into {topic}: ask {first} which {topic} "
+                f"session they are not willing to miss today.")
+    else:
+        line = f"Ask {first} what they are building these days."
+    return {"person_id": person_id, "other_id": other_id,
+            "name": other_name, "topic": topic, "shared_topics": shared,
+            "talk": talk, "line": line}
+
+
 # ---------- (c) and (d) memory: who I met, and recording a meeting ----------
 
 def met_list(g, person_id):
@@ -257,8 +351,13 @@ def met_list(g, person_id):
 
 
 def record_meeting(g, a_id, b_id, note, at=None):
-    """Write memory: a and b met. Replaces any previous MET edge between them."""
-    at = at or datetime.now().strftime("%H:%M")
+    """Write memory: a and b met. Replaces any previous MET edge between them.
+
+    A blank "at" (None, empty, or whitespace only) is normalized to the
+    current time, so a MET edge never carries an empty timestamp and
+    met_list sorting stays sane.
+    """
+    at = (at or "").strip() or datetime.now().strftime("%H:%M")
     g.query(
         "MATCH (a:Person {id: $a})-[old:MET]-(b:Person {id: $b}) DELETE old",
         {"a": a_id, "b": b_id},
