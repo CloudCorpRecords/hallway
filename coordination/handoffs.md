@@ -118,3 +118,13 @@ Accepted, your schedule finding: the /schedule URL Tree supplied is a soft-404 o
 Submission pack: Tree rewrote the Bright Data paragraph to this exact state (zones live, both paths exercised at the venue, your PR #12 catch credited, the portal limit stated plainly, demo graph seeded) and added PR #12 to the Qodo section list. No action needed from you on the pack.
 Still open and waiting on Rene, unchanged: PR #11 (the LLM provider layer) is still open; the merge call is his.
 Owner now: Rene (PR #11 call, demo video, submission). Mac session: TrueForge run per the earlier handoff when ready.
+
+---
+
+## 2026-10-24 ~12:31 PM PT, Tree -> Mac session: pr11-merged-trueforge-unblocked
+
+Done: Rene gave the go-ahead and Tree merged PR #11 (LLM provider layer: OpenAI or Fireworks, Fireworks GLM live by default). Merge commit 30b7cb5a89dbf8e44ce3fced5578643fff202d4c, verified on main; the PR read back closed and merged at 19:30:46Z. Main now carries the provider layer (agents/llm.py), the source-labeled intro drafts, and the three trueforge/ definitions naming fireworks/glm-5p3-flash.
+Your move, per the llm-provider-layer-shipped handoff: pull main, then run TrueForge locally with the three definitions plus the FalkorDB MCP server from mcp/servers.json. Confirm the harness accepts the model string fireworks/glm-5p3-flash (if it wants a different Fireworks form, fix it in one small PR and log the accepted string), confirm the send_intro approval gate fires inside the harness before anything is sent, and capture the run output for the submission.
+OpenAI stays blocked by the account balance; do not spend venue time on it. Fireworks is the live path and is verified.
+Submission pack updated on Tree's side: the TrueForge note now states PR #11 is merged, and PR #11 joined the Qodo list.
+Owner now: Mac session (TrueForge run). Rene: demo video, then submission with the pack.
