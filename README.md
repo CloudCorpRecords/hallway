@@ -45,7 +45,7 @@ rumor. The same module answers the directory questions (who works at a
 company, what a speaker is giving), explains every talk it offers, and
 builds the icebreakers.
 
-## The board
+## The board and the desktop app
 
 The web app (`app/`) is a one-page board with a warm, friendly face: the
 whole day as a timeline of talk cards colored by topic, your picks glowing
@@ -53,8 +53,18 @@ green, Add and Drop buttons that edit your plan in place (a clash comes
 back as a plain-language refusal naming the talk in the way), a Who to meet
 panel where each card shows the connection as a breadcrumb trail (You,
 topic, talk, person) with its icebreaker and the full graph path one click
-deeper, a Who I already met memory panel, and a Scout banner that appears
-when the last schedule refresh moved something.
+deeper, one-click **Draft intro (approval gate)** and **We met in the
+hallway** buttons right on each match card, an **AI Day Briefing** button,
+a **Who I already met** memory panel, a **Company directory** graph lookup
+panel, a **Reset Demo** stage button, and a Scout banner that appears when
+the last schedule refresh moved something.
+
+For non-developers, `electron/` wraps the entire stack as a standalone
+macOS app (`Hallway.app`, see `electron/README.md`). Opening the app boots
+FalkorDB via Docker Compose, prepares the Python environment, seeds the
+conference graph on first launch, starts the FastAPI board server, and
+loads the board with a visual step checklist and plain-English recovery if
+Docker is not running.
 
 ## Architecture: where the harness ends and the graph begins
 
@@ -94,17 +104,17 @@ TrueForge is TypeScript first, so Hallway is split at the harness boundary:
   and `ingest/brightdata.py`), which is how the agent layer calls it.
   With no API key configured, the adapter serves bundled fixtures so the
   whole system still runs.
-- **TrueFoundry TrueForge with OpenAI (Track 3)** is the agent harness.
+- **TrueFoundry TrueForge (Track 3)** is the agent harness.
   It starts with one command, nothing to clone:
-  `npx @truefoundry/trueforge`. The agents in `trueforge/` run on OpenAI
-  models configured as a standard provider (trueforge.dev/models), with
-  the venue $50 credit key from platform.openai.com/api-keys, the Bright
-  Data and FalkorDB MCP servers as tools, the sandbox for messy schedule
-  parsing, and TrueForge human approvals as the gate in front of
-  Matchmaker's intros. OpenAI also powers the optional natural language
-  briefing in the runner. Without the harness or a key, the runner falls
-  back to the local loop and then to a fully deterministic no-LLM mode:
-  the demo never hard-depends on a service.
+  `npx @truefoundry/trueforge`. The agents in `trueforge/` run on Fireworks
+  GLM (`fireworks/glm-5p3-flash`) or OpenAI models configured as a standard
+  provider (trueforge.dev/models, see `trueforge/README.md`), with the
+  Bright Data and FalkorDB MCP servers as tools, the sandbox for messy
+  schedule parsing, and TrueForge human approvals as the gate in front of
+  Matchmaker's intros. The LLM provider layer (`agents/llm.py`) also powers
+  the natural language briefing and intro drafting. Without the harness or
+  a key, the runner falls back to the local loop and then to a fully
+  deterministic no-LLM mode: the demo never hard-depends on a service.
 - **Qodo (Track 4)** reviews every pull request. The repo ships in small,
   single-purpose PRs from the first commit, Qodo reviews each one
   (install: docs.qodo.ai/install-qodo/github/qodo-multi-tenant; a manual
@@ -114,6 +124,11 @@ TrueForge is TypeScript first, so Hallway is split at the harness boundary:
 ## Quickstart
 
 ```bash
+# Option A: Standalone macOS Desktop App (starts Docker, venv, seed, and UI)
+open electron/dist/mac-arm64/Hallway.app
+# or from source: cd electron && npm install && npm start
+
+# Option B: CLI & Web App
 # 1. Graph database ( pick one )
 docker compose up -d                                   # FalkorDB on 6379 + browser on 3000
 # or, no Docker: redis-server --loadmodule falkordb-x64.so --port 6379
@@ -132,28 +147,22 @@ uvicorn app.main:app --port 8000    # http://localhost:8000
 
 # 5. Tests (need FalkorDB running)
 python tests/test_smoke.py    # the original 3 smoke tests
-python tests/test_full.py     # the full suite: 15 tests over queries,
-                              # agents, icebreakers and Scout
+python tests/test_full.py     # the full suite: 29+ tests over queries,
+                              # agents, icebreakers, Scout, LLM and API
 ```
 
 ## Status
 
-Real and tested against a live FalkorDB (redis-server with the official
-FalkorDB module): the graph layer (schema, seed, the money queries with
-path rendering, talk explanations, company and speaker directory queries,
-deterministic icebreakers), Scout's change detection, Planner's clash free
-planning and repair, Matchmaker's suggestions, icebreakers, drafting and
-approval adapter, the board UI with in-place plan editing, and the
-deterministic runner end to end. The sample conference now runs 18 people
-and 19 talks, with a parallel choice in every slot. The test suite is
-tests/test_full.py (15 tests, all passing) alongside the original smoke
-tests (3/3); both run against scratch graphs and never touch the demo
+Real and tested against a live FalkorDB: the graph layer (schema, seed, the
+money queries with path rendering, talk explanations, company and speaker
+directory queries, deterministic icebreakers), Scout's change detection and
+stale-edge reconciliation, Planner's clash free planning, repair and LLM
+day briefing, Matchmaker's suggestions, icebreakers, LLM/template intro
+drafting and approval gate adapter, the interactive board UI (with in-place
+plan editing, one-click meeting writeback, approval-gated intro drafting,
+company directory, and stage reset), the standalone Electron desktop app
+(`electron/`), and the deterministic runner end to end. The sample
+conference runs 18 people and 19 talks, with a parallel choice in every
+slot. All test suites run against scratch graphs and never touch the demo
 graph.
 
-The expansion landed as small pull requests, in flight as of judging:
-PR #5 (richer data, smarter queries, icebreakers, the full test suite),
-PR #6 (the board), and this PR (docs). Structured and documented, waiting
-on venue accounts: the TrueForge agent.json definitions in `trueforge/`,
-the MCP server configs in `mcp/`, Bright Data live keys (fixtures stand
-in), OpenAI credits. BUILD-PLAN.md is the runbook that flips each one
-live. DEMO.md is the stage script.

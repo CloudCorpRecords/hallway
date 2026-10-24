@@ -1,0 +1,78 @@
+{
+  "name": "hallway",
+  "productName": "Hallway",
+  "version": "0.1.0",
+  "description": "Hallway: your conference, run by agents that share one graph.",
+  "main": "main.js",
+  "author": "Hallway",
+  "license": "ISC",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --mac --arm64",
+    "dist:intel": "electron-builder --mac --x64",
+    "pack": "electron-builder --dir"
+  },
+  "devDependencies": {
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "com.hallway.app",
+    "productName": "Hallway",
+    "asar": true,
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../app",
+        "to": "backend/app",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../graph",
+        "to": "backend/graph",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../agents",
+        "to": "backend/agents",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../ingest",
+        "to": "backend/ingest",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../mcp",
+        "to": "backend/mcp",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../requirements.txt",
+        "to": "backend/requirements.txt"
+      },
+      {
+        "from": "../docker-compose.yml",
+        "to": "backend/docker-compose.yml"
+      },
+      {
+        "from": "../.env.example",
+        "to": "backend/.env.example"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64", "x64"]
+        }
+      ]
+    }
+  }
+}

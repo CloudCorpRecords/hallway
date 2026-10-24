@@ -4,3 +4,5 @@ __pycache__/
 *.pyc
 .runtime/
 .pytest_cache/
+electron/node_modules/
+electron/dist/

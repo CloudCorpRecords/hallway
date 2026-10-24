@@ -57,6 +57,11 @@ class PlanChangeIn(BaseModel):
     talk_id: str
 
 
+class IntroDraftIn(BaseModel):
+    person_id: str
+    other_id: str
+
+
 @app.get("/")
 def index():
     return FileResponse(STATIC / "index.html")
@@ -110,6 +115,40 @@ def rebuild(person_id: str):
     def _run():
         g = graph()
         return {"plan": planner.build_plan(g, person_id)}
+    return guard(_run)
+
+
+@app.get("/api/plan/{person_id}/summary")
+def plan_summary_ep(person_id: str):
+    """Natural language briefing of the attendee's planned day."""
+    def _run():
+        g = graph()
+        res = g.query(
+            "MATCH (p:Person {id: $pid}) RETURN p.name", {"pid": person_id})
+        name = res.result_set[0][0] if res.result_set else person_id
+        planned_ids = {p["id"] for p in queries.planned_talks(g, person_id)}
+        current_plan = [t for t in queries.talks_for(g, person_id)
+                        if t["id"] in planned_ids]
+        for t in current_plan:
+            reasons = t.get("reasons") or [
+                f"matches your interest in {tp}" for tp in t["topics"]]
+            t["why"] = "; ".join(reasons)
+        summary = planner.plan_summary(name, current_plan)
+        if not summary and current_plan:
+            first, last = current_plan[0], current_plan[-1]
+            summary = (f"{name}, you have {len(current_plan)} clash-free "
+                       f"talks planned today, starting at {first['starts']} "
+                       f"with \"{first['title']}\" ({first['room']}) and "
+                       f"wrapping up at {last['starts']} with "
+                       f"\"{last['title']}\" ({last['room']}).")
+            source = "template"
+        else:
+            from agents import llm
+            cfg = llm.config()
+            source = f"llm:{cfg['provider']}:{cfg['model']}" if summary else "empty"
+        return {"person_id": person_id, "name": name,
+                "summary": summary or "", "source": source,
+                "talk_count": len(current_plan)}
     return guard(_run)
 
 
@@ -176,6 +215,46 @@ def matchmake_ep(person_id: str):
     return guard(_run)
 
 
+@app.post("/api/intro/draft")
+def intro_draft_ep(req: IntroDraftIn):
+    """Draft an intro grounded in graph evidence and park it at the human
+    approval gate before anything is sent."""
+    def _run():
+        g = graph()
+        res = g.query(
+            "MATCH (p:Person {id: $pid}) RETURN p.name",
+            {"pid": req.person_id})
+        my_name = res.result_set[0][0] if res.result_set else req.person_id
+        matches = matchmaker.suggest(g, req.person_id, limit=25)
+        target = next((m for m in matches if m["person_id"] == req.other_id),
+                      None)
+        if target is None:
+            res_o = g.query(
+                "MATCH (p:Person {id: $oid}) RETURN p.name, p.company",
+                {"oid": req.other_id})
+            if not res_o.result_set:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"No person with id {req.other_id}")
+            oname, ocomp = res_o.result_set[0]
+            target = {
+                "person_id": req.other_id, "name": oname, "company": ocomp,
+                "shared_topics": [], "speaking_on": [],
+                "icebreaker": queries.icebreaker(g, req.person_id, req.other_id),
+            }
+        draft, source = matchmaker.intro_draft_with_source(my_name, target)
+        verdict = matchmaker.request_approval(draft, noninteractive=True)
+        return {
+            "person_id": req.person_id,
+            "other_id": req.other_id,
+            "recipient": target.get("name"),
+            "draft": draft,
+            "source": source,
+            "approval": verdict,
+        }
+    return guard(_run)
+
+
 @app.get("/api/met/{person_id}")
 def met(person_id: str):
     def _run():
@@ -193,6 +272,26 @@ def record(meeting: MeetingIn):
     return guard(_run)
 
 
+@app.get("/api/company/{company}")
+def company_directory(company: str):
+    """Everyone who works at a given company in the conference graph."""
+    def _run():
+        g = graph()
+        return {"company": company,
+                "people": queries.people_by_company(g, company)}
+    return guard(_run)
+
+
+@app.get("/api/speaker/{person_id}/talks")
+def speaker_talks(person_id: str):
+    """Talks a speaker gives, in day order."""
+    def _run():
+        g = graph()
+        return {"person_id": person_id,
+                "talks": queries.talks_by_speaker(g, person_id)}
+    return guard(_run)
+
+
 @app.post("/api/scout/refresh")
 def refresh():
     def _run():
@@ -203,7 +302,20 @@ def refresh():
     return guard(_run)
 
 
+@app.post("/api/demo/reset")
+def demo_reset(person_id: str = "rene"):
+    """Reset the graph to fresh stage-start state and rebuild the plan."""
+    def _run():
+        g = graph()
+        counts = seed.seed(g, fresh=True)
+        built = planner.build_plan(g, person_id)
+        LAST_REFRESH.update({"source": None, "upserted": 0, "changes": []})
+        return {"reset": True, "counts": counts, "planned": len(built)}
+    return guard(_run)
+
+
 @app.get("/api/changes")
 def changes():
     """The last Scout refresh: what moved, in plain lines."""
     return dict(LAST_REFRESH)
+
