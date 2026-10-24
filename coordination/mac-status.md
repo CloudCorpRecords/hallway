@@ -59,6 +59,21 @@ Matches Tree's wiring evidence row for row. TrueForge can use the checked-in ent
 
 Follow coordination/PROTOCOL.md: keep the claim format, use the status vocabulary, and never mark READY or DONE without the verbatim test result or a link to it.
 
+## Results (TrueForge live run, 2026-10-24 ~1:25 PM PT)
+
+Task: trueforge-run (live, with Rene's Fireworks key)
+Owner: Mac session
+Status: READY
+Finished: 2026-10-24 ~1:25 PM PT
+
+Evidence:
+- Python layer live first: llm.describe "fireworks / accounts/fireworks/models/glm-5p3-flash via https://api.fireworks.ai/inference/v1", chat returned the exact probe string. Key lives in gitignored .env only.
+- Harness loop live end to end: agent hallway-matchmaker-live (repo definition, model fireworks/glm-5p3-flash accepted as-is, no definition change), session plus 9 turns against the bridged FalkorDB MCP. Six tool.approval_required gates fired and held; each approved batch resumed the run; one ask_user_question answered (identity: Rene Turcios).
+- Final answer (verbatim excerpts, full JSON in /tmp/hallway-trueforge-capture/final-answer.json): top pick "Omar Haddad (Lockstep Security)" with path "You -> INTERESTED_IN -> MCP <- ABOUT -- MCP Security Deep Dive <- GIVES -- Omar", plus Lena Fischer and Maya Chen with paths, Tom Alvarez excluded by MET edge, and a grounded Omar intro draft marked "submitted for your approval, nothing sends without your OK".
+- Gate semantics proven: nothing executed before approval; the tool ran only after explicit allow, including the batch rule (parallel calls must be approved together: "Send batch must resolve all pending tool calls awaiting user input").
+- Wiring notes for re-running: harness needs OUTBOUND_URL_ALLOWED_HOSTS='["localhost"]' to reach a local bridge; bridge was uvx mcp-proxy --transport sse --host 127.0.0.1 --port 8123 -- npx -y @falkordb/mcpserver@latest; MCP registered as remote http://localhost:8123/sse with require_approval_for_tools ["@all"]. TrueForge MCP is remote-URL only, no stdio shape; approvals are per-server selectors, so send_intro still needs a harness-native mapping in Tree's lane.
+- Cleanup: probe agents and the bridge MCP registration deleted from the harness; real Fireworks provider config kept (desired end state). Graph service, harness, and bridge stopped after the run. Demo graph untouched (reads only). Qodo trigger comment posted on PR #12; no reviews have landed on any PR yet.
+
 ## Results (TrueForge run, 2026-10-24 ~1:05 PM PT)
 
 Task: trueforge-run
