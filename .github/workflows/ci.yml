@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  offline-tests:
+    # No FalkorDB, no network, no API keys: the LLM provider layer with a
+    # fake transport, the seed data integrity checks and the Bright Data
+    # fixture fallbacks. This job is the fast gate for every change.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run offline tests
+        run: >
+          python -m pytest tests/test_llm.py tests/test_seed_data.py
+          tests/test_brightdata.py tests/test_env_loading.py -v
+
+  graph-tests:
+    # The full suites run against a real FalkorDB, same image and port as
+    # docker-compose.yml, on scratch graphs so nothing shared is touched.
+    runs-on: ubuntu-latest
+    services:
+      falkordb:
+        image: falkordb/falkordb:latest
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      FALKORDB_URL: redis://localhost:6379
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run graph and API tests
+        run: >
+          python -m pytest tests/test_smoke.py tests/test_full.py
+          tests/test_api.py -v

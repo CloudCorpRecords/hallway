@@ -149,7 +149,15 @@ uvicorn app.main:app --port 8000    # http://localhost:8000
 python tests/test_smoke.py    # the original 3 smoke tests
 python tests/test_full.py     # the full suite: 29+ tests over queries,
                               # agents, icebreakers, Scout, LLM and API
+
+# Offline tests (no FalkorDB, no network, no API keys)
+python -m pytest tests/test_llm.py tests/test_seed_data.py \
+    tests/test_brightdata.py tests/test_env_loading.py
 ```
+
+CI (`.github/workflows/ci.yml`) runs the offline suite on every push and
+the graph suites against a FalkorDB service container, mirroring
+`docker-compose.yml`.
 
 ## Status
 
